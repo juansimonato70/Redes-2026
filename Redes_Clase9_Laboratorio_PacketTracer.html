@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio - Clase 9: Ethernet y Paquetes IP</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 880px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    h2 {
+        color: #764ba2;
+        font-size: 1.3em;
+        margin: 25px 0 12px 0;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 6px;
+    }
+
+    p, li { color: #333; font-size: 0.92em; line-height: 1.55; margin-bottom: 6px; }
+    ul, ol { margin-left: 22px; margin-bottom: 10px; }
+    strong { color: #667eea; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 16px 20px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+    }
+
+    .badge-pt {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        font-size: 0.75em;
+        padding: 3px 10px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        font-weight: bold;
+    }
+
+    .caja-concepto {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        padding: 10px 14px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    .caja-concepto h4 { color: #667eea; margin-bottom: 5px; font-size: 1em; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+        font-size: 0.85em;
+    }
+    th, td { border: 1px solid #667eea; padding: 8px; text-align: left; }
+    th { background: #667eea; color: white; }
+    tr:nth-child(even) { background: #f8f9ff; }
+
+    .paso {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 14px;
+        align-items: flex-start;
+    }
+
+    .paso-num {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        background: #667eea;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9em;
+    }
+
+    .paso-contenido { flex: 1; }
+    .paso-titulo { font-weight: bold; color: #333; margin-bottom: 3px; font-size: 0.95em; }
+
+    .checklist { list-style: none; margin-left: 0; }
+    .checklist li {
+        padding: 10px 12px;
+        background: #f8f9ff;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        margin-bottom: 6px;
+        font-size: 0.9em;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .checklist li:hover { background: #eef1ff; }
+    .checklist li input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-top: 1px;
+        accent-color: #667eea;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .checklist li.tildado { background: #e8f9ee; border-color: #34c26a; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin: 20px 0;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .progreso-box {
+        text-align: center;
+        font-size: 0.85em;
+        color: #667eea;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .btn-enviar {
+        display: block;
+        margin: 15px auto 10px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-enviar:hover { background: #5568d3; }
+    .btn-enviar:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+
+    .pregunta-reflexion {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 6px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+    }
+    .pregunta-reflexion .texto-pregunta {
+        font-weight: bold;
+        color: #333;
+        font-size: 0.92em;
+        margin-bottom: 8px;
+    }
+    .pregunta-reflexion textarea {
+        width: 100%;
+        min-height: 70px;
+        padding: 10px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 0.9em;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+    .pregunta-reflexion textarea:focus { outline: 2px solid #667eea; }
+    .pregunta-reflexion textarea.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .pie { text-align: center; margin-top: 25px; font-size: 0.85em; color: #888; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <h1>🧪 Laboratorio</h1>
+    <p class="subtitulo">Clase 9 — Conmutación Ethernet y Paquetes IP</p>
+    <span class="badge-pt">💻 Cisco Packet Tracer</span>
+
+    <div class="intro-box">
+        <strong>Objetivo:</strong> Observar en la práctica cómo un switch construye su tabla de direcciones MAC, capturar una trama Ethernet real e identificar sus campos, e inspeccionar la estructura de un paquete IPv4 dentro de esa trama.
+    </div>
+
+    <h2>1. Materiales necesarios</h2>
+    <ul>
+        <li>Cisco Packet Tracer (versión 8.x o superior)</li>
+        <li>4 PC de escritorio (PC-PT)</li>
+        <li>1 Switch (2960)</li>
+        <li>Cables rectos (Copper Straight-Through)</li>
+    </ul>
+
+    <h2>2. Topología a construir</h2>
+    <ul>
+        <li><strong>PC0, PC1, PC2 y PC3</strong> conectados al <strong>Switch0</strong>, cada uno a un puerto distinto</li>
+        <li>Todos en la misma red: 192.168.1.0/24</li>
+    </ul>
+
+    <h2>3. Guía paso a paso</h2>
+
+    <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Armar la topología y direccionar los PCs</div>
+            <p>Conectá los 4 PCs al switch con cable recto, cada uno a un puerto distinto (Fa0/1, Fa0/2, Fa0/3, Fa0/4). Asigná a cada uno una IP dentro de 192.168.1.0/24.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Ver la tabla MAC vacía</div>
+            <p>En Switch0 → CLI, ejecutá <code>show mac address-table</code>. Al no haber circulado tráfico todavía, la tabla debería estar vacía (o casi).</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Generar tráfico entre los PCs</div>
+            <p>Desde PC0, hacé ping a PC1, PC2 y PC3 (uno por uno). Cada ping obliga al switch a aprender la MAC de origen de esa trama.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Ver la tabla MAC poblada</div>
+            <p>Volvé a ejecutar <code>show mac address-table</code> en el switch. Ahora deberías ver las 4 direcciones MAC, cada una asociada al puerto físico correspondiente.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">5</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Capturar una trama en modo Simulation</div>
+            <p>Cambiá a modo <strong>Simulation</strong>. Enviá un ping de PC2 a PC3 y usá "Capture/Forward". Hacé clic en el paquete sobre el cable y abrí la pestaña <strong>OSI Model</strong>.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">6</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Identificar los campos de la trama Ethernet (Capa 2)</div>
+            <p>En el detalle de Capa 2, ubicá los campos <strong>Preamble</strong>, <strong>Dest MAC</strong>, <strong>Src MAC</strong>, <strong>Type</strong> y <strong>FCS</strong>. Confirmá que Dest MAC y Src MAC coinciden con las MACs de PC3 y PC2 respectivamente.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">7</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Identificar los campos del paquete IPv4 (Capa 3)</div>
+            <p>En el mismo detalle, bajá a la sección de Capa 3 (IP). Ubicá los campos <strong>Src IP</strong>, <strong>Dest IP</strong> y <strong>TTL</strong>. Anotá el valor inicial del TTL.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">8</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Comparar trama vs paquete</div>
+            <p>Repetí la captura una vez más y compará: la trama Ethernet (capa 2) tiene MACs de PC2 y PC3 (vecinos directos, mismo switch), mientras que el paquete IP (capa 3) tiene las IPs de PC2 y PC3 como origen/destino final. En este caso, como están en la misma red, MAC destino de la trama = MAC real del destino final (a diferencia de cuando el tráfico cruza un router).</p>
+        </div>
+    </div>
+
+    <h2>4. Checklist de verificación final</h2>
+    <div class="progreso-box" id="progresoTexto">0 / 6 pasos completados</div>
+    <ul class="checklist" id="checklistLab">
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Los 4 PCs están conectados y direccionados en la misma red</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se observó la tabla MAC vacía antes de generar tráfico</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se generó tráfico con ping entre los 4 PCs</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> La tabla MAC quedó poblada con las 4 direcciones y sus puertos</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se identificaron los campos de la trama Ethernet en modo Simulation</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se identificaron los campos del paquete IPv4 (Src IP, Dest IP, TTL)</label></li>
+    </ul>
+
+    <h2>5. Preguntas de reflexión</h2>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">1. ¿Por qué la tabla MAC del switch estaba vacía al principio, y qué la hizo poblarse?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">2. En este laboratorio, la MAC destino de la trama coincide con la MAC real del destino final. ¿En qué situación (vista en clases anteriores) esto NO sería así?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">3. ¿Qué pasaría con el valor de TTL del paquete si en vez de estar en la misma red, PC2 y PC3 estuvieran separados por 3 routers?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn-enviar" id="btnEnviarLab">Enviar confirmación de laboratorio</button>
+    <div class="estado-envio" id="estadoEnvio"></div>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Clase 9 · Laboratorio Packet Tracer</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — PEGAR ACÁ LA URL DE TU GOOGLE APPS SCRIPT
+//
+// 1. Abrí tu planilla de Google Sheets para "Clase 9 - Laboratorio"
+// 2. Extensiones → Apps Script → pegá el script → Implementar →
+//    Nueva implementación → Aplicación web → Copiá la URL (.../exec)
+// 3. Reemplazá el texto de abajo, entre comillas, por esa URL
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHZbMnK7E7b9zp53cRb739DEKm99g5UoLF9-EX9TAE18pgRR86MPkUbGxTx-szb8C3dg/exec";
+const NOMBRE_CLASE = "Clase 9 - Laboratorio";
+// ═══════════════════════════════════════════════════════════════
+
+const checks = document.querySelectorAll('.check-item');
+const progresoTexto = document.getElementById('progresoTexto');
+
+function actualizarProgreso() {
+    let completados = 0;
+    checks.forEach(c => {
+        const li = c.closest('li');
+        if (c.checked) {
+            completados++;
+            li.classList.add('tildado');
+        } else {
+            li.classList.remove('tildado');
+        }
+    });
+    progresoTexto.textContent = `${completados} / ${checks.length} pasos completados`;
+    return completados;
+}
+
+checks.forEach(c => c.addEventListener('change', actualizarProgreso));
+actualizarProgreso();
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando confirmación...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Confirmación enviada a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnEnviarLab').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    // Validar preguntas de reflexión
+    const textareas = document.querySelectorAll('.respuesta-reflexion');
+    let faltante = null;
+    textareas.forEach(t => {
+        if (!t.value.trim()) {
+            t.classList.add('campo-error');
+            if (!faltante) faltante = t;
+        } else {
+            t.classList.remove('campo-error');
+        }
+    });
+    if (faltante) {
+        faltante.focus();
+        faltante.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+
+    const completados = actualizarProgreso();
+    const total = checks.length;
+    const porcentaje = Math.round((completados / total) * 100);
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    const respuestas = Array.from(textareas).map((t, i) => {
+        const pregunta = t.closest('.pregunta-reflexion').querySelector('.texto-pregunta').textContent.trim();
+        return `${pregunta} => ${t.value.trim()}`;
+    }).join(' | ');
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: completados,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora,
+        respuestas: respuestas
+    });
+
+    this.disabled = true;
+    this.textContent = 'Confirmación enviada ✓';
+});
+</script>
+</body>
+</html>

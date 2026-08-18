@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario - Clase 6: TCP/UDP, DNS y Servicios de Aplicación</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 850px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        font-size: 0.9em;
+        color: #333;
+    }
+
+    .pregunta {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 8px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+        transition: border-color 0.2s;
+    }
+
+    .pregunta-num { color: #667eea; font-weight: bold; font-size: 0.85em; margin-bottom: 4px; }
+    .pregunta-texto { color: #222; font-size: 1em; font-weight: 600; margin-bottom: 10px; }
+
+    .opciones { list-style: none; }
+
+    .opcion {
+        display: block;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        background: white;
+        border: 1px solid #d8ddf5;
+        color: #333;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .opcion:hover { background: #eef1ff; }
+    .opcion input { margin-right: 8px; }
+
+    /* Estado tras corregir */
+    .pregunta.corregida .opcion { cursor: default; }
+    .pregunta.corregida .opcion:hover { background: white; }
+    .pregunta.corregida .opcion.marcar-correcta {
+        background: #e8f9ee; border-color: #34c26a; color: #1e7a41; font-weight: bold;
+    }
+    .pregunta.corregida .opcion.marcar-incorrecta {
+        background: #fdecec; border-color: #e35a5a; color: #a33131;
+    }
+
+    .justificacion {
+        display: none;
+        margin-top: 8px;
+        font-size: 0.82em;
+        color: #555;
+        font-style: italic;
+        border-top: 1px dashed #d8ddf5;
+        padding-top: 6px;
+    }
+    .pregunta.corregida .justificacion { display: block; }
+
+    .icono-resultado { font-weight: bold; margin-right: 4px; }
+
+    .btn-corregir {
+        display: block;
+        margin: 10px auto 25px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-corregir:hover { background: #5568d3; }
+    .btn-corregir:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .resultado-final {
+        display: none;
+        text-align: center;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 0 0 25px 0;
+        border: 2px solid #667eea;
+    }
+    .resultado-final.mostrar { display: block; }
+    .resultado-final .puntaje { font-size: 2.2em; font-weight: bold; color: #667eea; }
+    .resultado-final .mensaje { font-size: 1em; color: #555; margin-top: 6px; }
+    .resultado-final.aprobado { background: #e8f9ee; border-color: #34c26a; }
+    .resultado-final.aprobado .puntaje { color: #1e7a41; }
+    .resultado-final.reprobado { background: #fff6e8; border-color: #f0a63c; }
+    .resultado-final.reprobado .puntaje { color: #b3711a; }
+
+    .pie { text-align: center; margin-top: 10px; font-size: 0.85em; color: #888; }
+
+    .aviso-incompleto {
+        display: none;
+        text-align: center;
+        color: #a33131;
+        background: #fdecec;
+        border: 1px solid #e35a5a;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+    }
+    .aviso-incompleto.mostrar { display: block; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <h1>📋 Cuestionario</h1>
+    <p class="subtitulo">Clase 6 — TCP/UDP, DNS y Servicios de Aplicación</p>
+
+    <div class="intro-box">
+        Respondé las 12 preguntas y presioná <strong>"Corregir cuestionario"</strong> al final. Vas a ver tu puntaje y la justificación de cada respuesta correcta.
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <div id="resultadoFinal" class="resultado-final">
+        <div class="puntaje" id="puntajeTexto"></div>
+        <div class="mensaje" id="mensajeTexto"></div>
+        <div class="estado-envio" id="estadoEnvio"></div>
+    </div>
+
+    <div id="avisoIncompleto" class="aviso-incompleto">⚠️ Respondé todas las preguntas antes de corregir.</div>
+
+    <form id="quizForm">
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 1</div>
+            <div class="pregunta-texto">¿Cuál de las siguientes describe mejor a TCP?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q1" value="0"> Rápido pero sin garantía de entrega</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="1"> Orientado a conexión, garantiza entrega ordenada de los datos</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="2"> No usa números de puerto</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="3"> Solo funciona en redes inalámbricas</label></li>
+            </ul>
+            <div class="justificacion">TCP es orientado a conexión (three-way handshake) y garantiza que los datos lleguen completos y en orden, retransmitiendo si es necesario.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 2</div>
+            <div class="pregunta-texto">¿Por qué una videollamada usa UDP en vez de TCP?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q2" value="0"> Porque UDP es más seguro</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="1"> Porque UDP nunca pierde paquetes</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="2"> Porque prioriza la velocidad y baja latencia sobre la confiabilidad; perder algún paquete es tolerable</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="3"> Porque TCP no puede transportar video</label></li>
+            </ul>
+            <div class="justificacion">En videollamadas, la latencia baja es crítica y perder algún paquete ocasional es preferible a esperar retransmisiones que introducirían demoras.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 3</div>
+            <div class="pregunta-texto">¿Qué rango de puertos corresponde a los "puertos conocidos" (Well-Known)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q3" value="0"> 1024-49151</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="1"> 49152-65535</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="2"> 1-100</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="3"> 0-1023</label></li>
+            </ul>
+            <div class="justificacion">Los puertos 0-1023 son los "well-known", reservados para servicios estándar del sistema como HTTP (80), HTTPS (443) o SSH (22).</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 4</div>
+            <div class="pregunta-texto">¿Qué puerto utiliza HTTPS por defecto?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q4" value="0"> 80</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="1"> 443</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="2"> 21</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="3"> 25</label></li>
+            </ul>
+            <div class="justificacion">HTTPS usa el puerto 443 por defecto, mientras que HTTP sin cifrar usa el puerto 80.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 5</div>
+            <div class="pregunta-texto">En el modelo cliente-servidor, ¿qué rol cumple el cliente?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q5" value="0"> Inicia la conexión y realiza solicitudes</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="1"> Escucha pasivamente en un puerto esperando conexiones</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="2"> Atiende a miles de usuarios simultáneamente</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="3"> Nunca se conecta a Internet</label></li>
+            </ul>
+            <div class="justificacion">El cliente es quien inicia la conexión y realiza solicitudes; el servidor escucha en un puerto y responde a esas solicitudes.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 6</div>
+            <div class="pregunta-texto">¿Qué función cumple el DNS?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q6" value="0"> Cifra el tráfico web</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="1"> Asigna direcciones IP automáticamente</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="2"> Traduce nombres de dominio (como google.com) a direcciones IP</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="3"> Transfiere archivos entre servidores</label></li>
+            </ul>
+            <div class="justificacion">El DNS (Domain Name System) traduce nombres de dominio fáciles de recordar a las direcciones IP numéricas que realmente usan los dispositivos.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 7</div>
+            <div class="pregunta-texto">Al resolver un dominio nuevo (no cacheado), ¿en qué orden se consulta la jerarquía DNS?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q7" value="0"> Servidor autoritativo → TLD → raíz</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="1"> Servidor raíz → servidor TLD (.com) → servidor autoritativo del dominio</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="2"> Directamente al servidor web de destino</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="3"> Solo se consulta la caché local, nunca un servidor externo</label></li>
+            </ul>
+            <div class="justificacion">La resolución DNS sigue una jerarquía: primero el servidor raíz, que indica el servidor del TLD (.com, .org, etc.), que a su vez indica el servidor autoritativo del dominio específico.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 8</div>
+            <div class="pregunta-texto">¿Qué diferencia principal hay entre POP3 e IMAP?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q8" value="0"> POP3 es más moderno que IMAP</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="1"> IMAP se usa solo para enviar correos, POP3 para recibir</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="2"> No hay ninguna diferencia real</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="3"> POP3 descarga y generalmente borra los correos del servidor; IMAP los mantiene sincronizados entre varios dispositivos</label></li>
+            </ul>
+            <div class="justificacion">POP3 descarga los correos al cliente local (sin sincronizar entre dispositivos), mientras que IMAP mantiene los mensajes en el servidor y sincroniza el estado entre múltiples dispositivos.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 9</div>
+            <div class="pregunta-texto">¿Qué protocolo se utiliza para enviar (no recibir) correo electrónico?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q9" value="0"> IMAP</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="1"> POP3</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="2"> SMTP</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="3"> FTP</label></li>
+            </ul>
+            <div class="justificacion">SMTP (Simple Mail Transfer Protocol) es el protocolo usado para enviar correo electrónico, tanto del cliente al servidor como entre servidores.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 10</div>
+            <div class="pregunta-texto">¿Por qué se recomienda usar SSH en vez de Telnet para acceso remoto?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q10" value="0"> Porque SSH encripta toda la comunicación, mientras que Telnet la envía en texto plano</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="1"> Porque Telnet no funciona en redes modernas</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="2"> Porque SSH es más rápido</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="3"> No hay diferencia real entre ambos</label></li>
+            </ul>
+            <div class="justificacion">Telnet envía usuario y contraseña en texto plano (interceptable), mientras que SSH encripta toda la sesión, incluyendo la autenticación.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 11</div>
+            <div class="pregunta-texto">¿Qué código de estado HTTP indica que un recurso no fue encontrado?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q11" value="0"> 200</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="1"> 404</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="2"> 301</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="3"> 500</label></li>
+            </ul>
+            <div class="justificacion">El código 404 (Not Found) indica que el recurso solicitado no existe en el servidor. 200 es éxito, 301 es redirección, y 500 es error del servidor.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 12</div>
+            <div class="pregunta-texto">Una conexión de red se identifica de forma única mediante una combinación de 5 elementos. ¿Cuáles son?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q12" value="0"> Nombre de usuario, contraseña, IP, puerto y protocolo</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="1"> MAC origen, MAC destino, IP origen, IP destino y puerto</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="2"> IP origen, puerto origen, IP destino, puerto destino y protocolo</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="3"> Solo la dirección IP de origen</label></li>
+            </ul>
+            <div class="justificacion">La "tupla de 5 elementos" (IP origen, puerto origen, IP destino, puerto destino, protocolo) identifica de forma única cada conexión de red.</div>
+        </div>
+
+        <button type="button" class="btn-corregir" id="btnCorregir">Corregir cuestionario</button>
+    </form>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Clase 6</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — PEGAR ACÁ LA URL DE TU GOOGLE APPS SCRIPT
+//
+// 1. Abrí tu planilla de Google Sheets para "Clase 1 - Cuestionario"
+// 2. Extensiones → Apps Script → pegá el script → Implementar →
+//    Nueva implementación → Aplicación web → Copiá la URL (.../exec)
+// 3. Reemplazá el texto de abajo, entre comillas, por esa URL
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVDS5dMEVVzg363GJJk9dBBqjS5MeN0iaDuMiL6_eNI7R1xxq2U21c_SZ8mwnE9Na5aA/exec";
+const NOMBRE_CLASE = "Clase 6 - Cuestionario";
+// ═══════════════════════════════════════════════════════════════
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando resultado...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Resultado enviado a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar el resultado. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnCorregir').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    const preguntas = document.querySelectorAll('.pregunta');
+    let respondidas = 0;
+    preguntas.forEach(p => {
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        if (document.querySelector(`input[name=${nombreQ}]:checked`)) respondidas++;
+    });
+
+    const aviso = document.getElementById('avisoIncompleto');
+    if (respondidas < preguntas.length) {
+        aviso.classList.add('mostrar');
+        return;
+    }
+    aviso.classList.remove('mostrar');
+
+    let correctas = 0;
+    preguntas.forEach(p => {
+        const correctaIdx = p.getAttribute('data-correcta');
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        const seleccionado = document.querySelector(`input[name=${nombreQ}]:checked`);
+        const opciones = p.querySelectorAll('.opcion');
+
+        opciones.forEach((op, idx) => {
+            const input = op.querySelector('input');
+            input.disabled = true;
+            if (idx == correctaIdx) {
+                op.classList.add('marcar-correcta');
+            } else if (seleccionado && idx == seleccionado.value) {
+                op.classList.add('marcar-incorrecta');
+            }
+        });
+
+        p.classList.add('corregida');
+        if (seleccionado && seleccionado.value == correctaIdx) correctas++;
+    });
+
+    const total = preguntas.length;
+    const resultado = document.getElementById('resultadoFinal');
+    const puntajeTexto = document.getElementById('puntajeTexto');
+    const mensajeTexto = document.getElementById('mensajeTexto');
+
+    const porcentaje = Math.round((correctas / total) * 100);
+    puntajeTexto.textContent = `${correctas} / ${total} correctas (${porcentaje}%)`;
+
+    resultado.classList.add('mostrar');
+    if (porcentaje >= 60) {
+        resultado.classList.add('aprobado');
+        mensajeTexto.textContent = '¡Muy bien! Revisá las justificaciones para reforzar lo que falte.';
+    } else {
+        resultado.classList.add('reprobado');
+        mensajeTexto.textContent = 'Te conviene repasar la clase antes de seguir. Revisá cada justificación.';
+    }
+
+    resultado.scrollIntoView({behavior: 'smooth'});
+    this.disabled = true;
+    this.textContent = 'Cuestionario corregido ✓';
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: correctas,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora
+    });
+});
+</script>
+</body>
+</html>

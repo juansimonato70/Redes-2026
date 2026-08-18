@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario - Clase 5: Comunicaciones de Red</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 850px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        font-size: 0.9em;
+        color: #333;
+    }
+
+    .pregunta {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 8px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+        transition: border-color 0.2s;
+    }
+
+    .pregunta-num { color: #667eea; font-weight: bold; font-size: 0.85em; margin-bottom: 4px; }
+    .pregunta-texto { color: #222; font-size: 1em; font-weight: 600; margin-bottom: 10px; }
+
+    .opciones { list-style: none; }
+
+    .opcion {
+        display: block;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        background: white;
+        border: 1px solid #d8ddf5;
+        color: #333;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .opcion:hover { background: #eef1ff; }
+    .opcion input { margin-right: 8px; }
+
+    /* Estado tras corregir */
+    .pregunta.corregida .opcion { cursor: default; }
+    .pregunta.corregida .opcion:hover { background: white; }
+    .pregunta.corregida .opcion.marcar-correcta {
+        background: #e8f9ee; border-color: #34c26a; color: #1e7a41; font-weight: bold;
+    }
+    .pregunta.corregida .opcion.marcar-incorrecta {
+        background: #fdecec; border-color: #e35a5a; color: #a33131;
+    }
+
+    .justificacion {
+        display: none;
+        margin-top: 8px;
+        font-size: 0.82em;
+        color: #555;
+        font-style: italic;
+        border-top: 1px dashed #d8ddf5;
+        padding-top: 6px;
+    }
+    .pregunta.corregida .justificacion { display: block; }
+
+    .icono-resultado { font-weight: bold; margin-right: 4px; }
+
+    .btn-corregir {
+        display: block;
+        margin: 10px auto 25px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-corregir:hover { background: #5568d3; }
+    .btn-corregir:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .resultado-final {
+        display: none;
+        text-align: center;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 0 0 25px 0;
+        border: 2px solid #667eea;
+    }
+    .resultado-final.mostrar { display: block; }
+    .resultado-final .puntaje { font-size: 2.2em; font-weight: bold; color: #667eea; }
+    .resultado-final .mensaje { font-size: 1em; color: #555; margin-top: 6px; }
+    .resultado-final.aprobado { background: #e8f9ee; border-color: #34c26a; }
+    .resultado-final.aprobado .puntaje { color: #1e7a41; }
+    .resultado-final.reprobado { background: #fff6e8; border-color: #f0a63c; }
+    .resultado-final.reprobado .puntaje { color: #b3711a; }
+
+    .pie { text-align: center; margin-top: 10px; font-size: 0.85em; color: #888; }
+
+    .aviso-incompleto {
+        display: none;
+        text-align: center;
+        color: #a33131;
+        background: #fdecec;
+        border: 1px solid #e35a5a;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+    }
+    .aviso-incompleto.mostrar { display: block; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <h1>📋 Cuestionario</h1>
+    <p class="subtitulo">Clase 5 — Gateways, NAT, ARP y Enrutamiento</p>
+
+    <div class="intro-box">
+        Respondé las 12 preguntas y presioná <strong>"Corregir cuestionario"</strong> al final. Vas a ver tu puntaje y la justificación de cada respuesta correcta.
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <div id="resultadoFinal" class="resultado-final">
+        <div class="puntaje" id="puntajeTexto"></div>
+        <div class="mensaje" id="mensajeTexto"></div>
+        <div class="estado-envio" id="estadoEnvio"></div>
+    </div>
+
+    <div id="avisoIncompleto" class="aviso-incompleto">⚠️ Respondé todas las preguntas antes de corregir.</div>
+
+    <form id="quizForm">
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 1</div>
+            <div class="pregunta-texto">¿Qué es un "gateway" (puerta de enlace) en una red?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q1" value="0"> Un cable de fibra óptica de alta velocidad</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="1"> El dispositivo que actúa como punto de salida hacia otras redes, típicamente un router</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="2"> Un tipo de dirección IPv6</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="3"> Un protocolo de cifrado</label></li>
+            </ul>
+            <div class="justificacion">El gateway (puerta de enlace) es el dispositivo, típicamente un router, que conecta una red local con redes externas.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 2</div>
+            <div class="pregunta-texto">¿Qué determina si un dispositivo pertenece a la misma red local que otro?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q2" value="0"> La máscara de subred, comparando la porción de red de ambas direcciones IP</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="1"> El nombre del dispositivo</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="2"> La marca del router</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="3"> La velocidad de la conexión</label></li>
+            </ul>
+            <div class="justificacion">La máscara de subred define la porción de red de una dirección IP; si dos dispositivos tienen la misma porción de red, están en la misma red local.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 3</div>
+            <div class="pregunta-texto">¿Qué problema principal resuelve NAT (Network Address Translation)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q3" value="0"> La lentitud de las redes WiFi</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="1"> La falta de servidores DNS</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="2"> El agotamiento de direcciones IPv4 públicas</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="3"> La necesidad de encriptar el tráfico</label></li>
+            </ul>
+            <div class="justificacion">NAT permite que múltiples dispositivos con IP privada compartan una o pocas direcciones IP públicas, aliviando el agotamiento de IPv4.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 4</div>
+            <div class="pregunta-texto">¿Cuál de las siguientes es una desventaja real de NAT?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q4" value="0"> Aumenta el costo de las direcciones IP públicas</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="1"> Rompe el modelo end-to-end de Internet y complica protocolos como VoIP o P2P</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="2"> Impide el acceso a Internet por completo</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="3"> Requiere reemplazar todos los switches de la red</label></li>
+            </ul>
+            <div class="justificacion">NAT introduce complejidad para aplicaciones que requieren conexiones directas extremo a extremo, como P2P, VoIP y videollamadas.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 5</div>
+            <div class="pregunta-texto">¿En qué capa del modelo OSI opera el protocolo ARP?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q5" value="0"> Capa 4 - Transporte</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="1"> Capa 7 - Aplicación</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="2"> Capa 3 - Red</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="3"> Capa 2 - Enlace de Datos</label></li>
+            </ul>
+            <div class="justificacion">ARP opera en la Capa 2 (Enlace de Datos), resolviendo direcciones IP (Capa 3) a direcciones MAC (Capa 2).</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 6</div>
+            <div class="pregunta-texto">Un PC quiere comunicarse con un servidor en una red remota. ¿Qué dirección MAC de destino coloca en la trama?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q6" value="0"> La dirección MAC del gateway (router)</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="1"> La dirección MAC del servidor remoto</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="2"> Una dirección MAC de broadcast</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="3"> No se necesita dirección MAC para tráfico remoto</label></li>
+            </ul>
+            <div class="justificacion">Cuando el destino es remoto, el PC coloca la MAC del gateway como destino de la trama, ya que ARP no puede resolver la MAC de un host fuera de la red local. La IP destino sigue siendo la del servidor final.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 7</div>
+            <div class="pregunta-texto">¿Cuántos bits tiene una dirección MAC?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q7" value="0"> 32 bits</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="1"> 128 bits</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="2"> 48 bits</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="3"> 16 bits</label></li>
+            </ul>
+            <div class="justificacion">Las direcciones MAC tienen 48 bits (6 bytes), representadas en formato hexadecimal.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 8</div>
+            <div class="pregunta-texto">¿Cuál es la diferencia principal entre cómo reenvían tráfico los switches y los routers?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q8" value="0"> Los switches usan IP y los routers usan MAC</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="1"> Los switches reenvían tramas por MAC dentro de una red local; los routers reenvían paquetes por IP entre redes distintas</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="2"> No hay ninguna diferencia, hacen lo mismo</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="3"> Los routers solo funcionan con fibra óptica</label></li>
+            </ul>
+            <div class="justificacion">Los switches operan en Capa 2 (MAC, dentro de la red local); los routers operan en Capa 3 (IP, entre redes diferentes).</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 9</div>
+            <div class="pregunta-texto">¿Qué comando se usa en un router Cisco para ver la tabla de enrutamiento?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q9" value="0"> arp -a</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="1"> ipconfig /all</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="2"> ping</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="3"> show ip route</label></li>
+            </ul>
+            <div class="justificacion">El comando "show ip route" en la CLI de Cisco muestra la tabla de enrutamiento del router.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 10</div>
+            <div class="pregunta-texto">¿Qué sucedería con la comunicación entre redes si no existieran los routers?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q10" value="0"> Cada red sería una isla aislada, sin poder comunicarse con otras redes</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="1"> Internet funcionaría igual, solo más lento</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="2"> Las direcciones MAC dejarían de existir</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="3"> No cambiaría nada</label></li>
+            </ul>
+            <div class="justificacion">Sin routers, cada red quedaría aislada dentro de su propio dominio de broadcast, sin posibilidad de comunicarse con redes externas — Internet no existiría tal como lo conocemos.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 11</div>
+            <div class="pregunta-texto">En el diseño de LAN visto en la clase (oficina de 50 empleados), ¿para qué se usan VLANs separadas?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q11" value="0"> Para que todos los dispositivos compartan la misma dirección IP</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="1"> Para aumentar la velocidad de la fibra óptica</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="2"> Para segmentar el tráfico (empleados, servidores, invitados) y aislar grupos de dispositivos</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="3"> Para reemplazar al servidor DHCP</label></li>
+            </ul>
+            <div class="justificacion">Las VLANs permiten segmentar lógicamente la red (por ejemplo, empleados, servidores e invitados) manteniendo el tráfico aislado entre grupos por motivos de organización y seguridad.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 12</div>
+            <div class="pregunta-texto">¿Cuál de estos NO es un componente típico de una LAN?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q12" value="0"> Switches</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="1"> Un ISP (proveedor de servicios de Internet)</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="2"> Access Points</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="3"> Cables Ethernet</label></li>
+            </ul>
+            <div class="justificacion">El ISP es una entidad externa que provee la conexión a Internet, no un componente interno de la LAN — la LAN es propiedad y responsabilidad de la organización.</div>
+        </div>
+
+        <button type="button" class="btn-corregir" id="btnCorregir">Corregir cuestionario</button>
+    </form>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Clase 5</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — PEGAR ACÁ LA URL DE TU GOOGLE APPS SCRIPT
+//
+// 1. Abrí tu planilla de Google Sheets para "Clase 1 - Cuestionario"
+// 2. Extensiones → Apps Script → pegá el script → Implementar →
+//    Nueva implementación → Aplicación web → Copiá la URL (.../exec)
+// 3. Reemplazá el texto de abajo, entre comillas, por esa URL
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVDS5dMEVVzg363GJJk9dBBqjS5MeN0iaDuMiL6_eNI7R1xxq2U21c_SZ8mwnE9Na5aA/exec";
+const NOMBRE_CLASE = "Clase 5 - Cuestionario";
+// ═══════════════════════════════════════════════════════════════
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando resultado...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Resultado enviado a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar el resultado. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnCorregir').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    const preguntas = document.querySelectorAll('.pregunta');
+    let respondidas = 0;
+    preguntas.forEach(p => {
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        if (document.querySelector(`input[name=${nombreQ}]:checked`)) respondidas++;
+    });
+
+    const aviso = document.getElementById('avisoIncompleto');
+    if (respondidas < preguntas.length) {
+        aviso.classList.add('mostrar');
+        return;
+    }
+    aviso.classList.remove('mostrar');
+
+    let correctas = 0;
+    preguntas.forEach(p => {
+        const correctaIdx = p.getAttribute('data-correcta');
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        const seleccionado = document.querySelector(`input[name=${nombreQ}]:checked`);
+        const opciones = p.querySelectorAll('.opcion');
+
+        opciones.forEach((op, idx) => {
+            const input = op.querySelector('input');
+            input.disabled = true;
+            if (idx == correctaIdx) {
+                op.classList.add('marcar-correcta');
+            } else if (seleccionado && idx == seleccionado.value) {
+                op.classList.add('marcar-incorrecta');
+            }
+        });
+
+        p.classList.add('corregida');
+        if (seleccionado && seleccionado.value == correctaIdx) correctas++;
+    });
+
+    const total = preguntas.length;
+    const resultado = document.getElementById('resultadoFinal');
+    const puntajeTexto = document.getElementById('puntajeTexto');
+    const mensajeTexto = document.getElementById('mensajeTexto');
+
+    const porcentaje = Math.round((correctas / total) * 100);
+    puntajeTexto.textContent = `${correctas} / ${total} correctas (${porcentaje}%)`;
+
+    resultado.classList.add('mostrar');
+    if (porcentaje >= 60) {
+        resultado.classList.add('aprobado');
+        mensajeTexto.textContent = '¡Muy bien! Revisá las justificaciones para reforzar lo que falte.';
+    } else {
+        resultado.classList.add('reprobado');
+        mensajeTexto.textContent = 'Te conviene repasar la clase antes de seguir. Revisá cada justificación.';
+    }
+
+    resultado.scrollIntoView({behavior: 'smooth'});
+    this.disabled = true;
+    this.textContent = 'Cuestionario corregido ✓';
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: correctas,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora
+    });
+});
+</script>
+</body>
+</html>

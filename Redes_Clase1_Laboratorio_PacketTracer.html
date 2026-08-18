@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio - Clase 1: Fundamentos de Redes</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 880px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    h2 {
+        color: #764ba2;
+        font-size: 1.3em;
+        margin: 25px 0 12px 0;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 6px;
+    }
+
+    p, li { color: #333; font-size: 0.92em; line-height: 1.55; margin-bottom: 6px; }
+    ul, ol { margin-left: 22px; margin-bottom: 10px; }
+    strong { color: #667eea; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 16px 20px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+    }
+
+    .badge-pt {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        font-size: 0.75em;
+        padding: 3px 10px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        font-weight: bold;
+    }
+
+    .caja-concepto {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        padding: 10px 14px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    .caja-concepto h4 { color: #667eea; margin-bottom: 5px; font-size: 1em; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+        font-size: 0.85em;
+    }
+    th, td { border: 1px solid #667eea; padding: 8px; text-align: left; }
+    th { background: #667eea; color: white; }
+    tr:nth-child(even) { background: #f8f9ff; }
+
+    .paso {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 14px;
+        align-items: flex-start;
+    }
+
+    .paso-num {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        background: #667eea;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9em;
+    }
+
+    .paso-contenido { flex: 1; }
+    .paso-titulo { font-weight: bold; color: #333; margin-bottom: 3px; font-size: 0.95em; }
+
+    .checklist { list-style: none; margin-left: 0; }
+    .checklist li {
+        padding: 10px 12px;
+        background: #f8f9ff;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        margin-bottom: 6px;
+        font-size: 0.9em;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .checklist li:hover { background: #eef1ff; }
+    .checklist li input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-top: 1px;
+        accent-color: #667eea;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .checklist li.tildado { background: #e8f9ee; border-color: #34c26a; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin: 20px 0;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .progreso-box {
+        text-align: center;
+        font-size: 0.85em;
+        color: #667eea;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .btn-enviar {
+        display: block;
+        margin: 15px auto 10px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-enviar:hover { background: #5568d3; }
+    .btn-enviar:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+
+    .pregunta-reflexion {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 6px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+    }
+    .pregunta-reflexion .texto-pregunta {
+        font-weight: bold;
+        color: #333;
+        font-size: 0.92em;
+        margin-bottom: 8px;
+    }
+    .pregunta-reflexion textarea {
+        width: 100%;
+        min-height: 70px;
+        padding: 10px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 0.9em;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+    .pregunta-reflexion textarea:focus { outline: 2px solid #667eea; }
+    .pregunta-reflexion textarea.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .pie { text-align: center; margin-top: 25px; font-size: 0.85em; color: #888; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <h1>🧪 Laboratorio</h1>
+    <p class="subtitulo">Clase 1 — Fundamentos de Redes</p>
+    <span class="badge-pt">💻 Cisco Packet Tracer</span>
+
+    <div class="intro-box">
+        <strong>Objetivo:</strong> Reconocer los distintos dispositivos de red (cliente, servidor, switch, router, access point) y los tipos de cableado correctos, armando una topología física básica en Packet Tracer. En esta clase <strong>no se configura direccionamiento IP</strong> (eso se aborda en la Clase 2) — el foco está en la infraestructura física y la conectividad.
+    </div>
+
+    <h2>1. Materiales necesarios</h2>
+    <ul>
+        <li>Cisco Packet Tracer (versión 8.x o superior)</li>
+        <li>2 PC de escritorio (PC-PT)</li>
+        <li>1 Laptop (Laptop-PT)</li>
+        <li>1 Switch (2960)</li>
+        <li>1 Router (1841 o ISR genérico)</li>
+        <li>1 Access Point inalámbrico (AP-PT)</li>
+        <li>1 Servidor (Server-PT)</li>
+        <li>Cables: Recto (Copper Straight-Through), Cruzado (Copper Cross-Over), Consola</li>
+    </ul>
+
+    <h2>2. Topología a construir</h2>
+    <p>Armá la siguiente distribución de dispositivos en el área de trabajo lógica de Packet Tracer:</p>
+    <ul>
+        <li><strong>PC0</strong> y <strong>PC1</strong> conectados al <strong>Switch0</strong></li>
+        <li><strong>Server0</strong> conectado también al <strong>Switch0</strong></li>
+        <li><strong>Switch0</strong> conectado al <strong>Router0</strong> (puerto Fa0/0)</li>
+        <li><strong>Access Point0</strong> conectado al <strong>Router0</strong> (puerto Fa0/1)</li>
+        <li><strong>Laptop0</strong> conectada de forma <strong>inalámbrica</strong> al Access Point0 (agregar módulo WPC300N a la laptop)</li>
+    </ul>
+
+    <h2>3. Guía paso a paso</h2>
+
+    <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Colocar los dispositivos</div>
+            <p>Desde la barra inferior de Packet Tracer, arrastrá al área de trabajo: 2 PCs, 1 Laptop, 1 Switch, 1 Router, 1 Access Point y 1 Server. Ordenalos según el diagrama de topología del punto 2.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Conectar PC0 y PC1 al Switch0</div>
+            <p>Seleccioná el cable <strong>Copper Straight-Through</strong> (recto). Conectá el puerto FastEthernet de cada PC al puerto FastEthernet0/1 y 0/2 del switch. Este es el cable correcto porque se conectan dispositivos de <strong>distinta categoría</strong> (host ↔ switch).</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Conectar el Server0 al Switch0</div>
+            <p>Repetí el mismo procedimiento con cable recto, conectando el servidor al puerto FastEthernet0/3 del switch.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Conectar el Switch0 al Router0</div>
+            <p>Usá cable <strong>recto</strong> nuevamente entre el puerto FastEthernet0/24 del switch y el puerto FastEthernet0/0 del router (switch ↔ router = dispositivos de distinta categoría).</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">5</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Conectar el Access Point0 al Router0</div>
+            <p>Conectá el puerto FastEthernet0/1 del router al puerto del Access Point con cable recto.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">6</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Agregar conectividad inalámbrica a la Laptop0</div>
+            <p>Apagá la laptop (botón de encendido), andá a la pestaña <strong>Physical</strong>, quitá el módulo Ethernet integrado y agregá el módulo <strong>WPC300N</strong> (inalámbrico). Volvé a encender la laptop. En la pestaña <strong>Config → Wireless0</strong>, verificá que detecte el SSID del Access Point y conectate.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">7</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Verificar el estado de los enlaces</div>
+            <p>Todos los puntos de conexión (los "led" junto a cada cable) deben estar en <strong>verde</strong>. Si alguno parpadea en ámbar, esperá unos segundos (tiempo de convergencia del switch) o revisá que el cable elegido sea el correcto.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">8</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Explorar la vista física (Physical Workspace)</div>
+            <p>Cambiá a la pestaña <strong>Physical</strong> (arriba a la izquierda). Observá cómo Packet Tracer representa el mismo diseño dentro de un rack/oficina realista. Identificá visualmente cada tipo de dispositivo y su cableado.</p>
+        </div>
+    </div>
+
+    <h2>4. Tabla de referencia: ¿qué cable usar?</h2>
+    <table>
+        <tr><th>Conexión</th><th>Tipo de cable</th></tr>
+        <tr><td>PC ↔ Switch</td><td>Recto (Straight-Through)</td></tr>
+        <tr><td>PC ↔ Router</td><td>Recto (Straight-Through)</td></tr>
+        <tr><td>Switch ↔ Router</td><td>Recto (Straight-Through)</td></tr>
+        <tr><td>Switch ↔ Switch</td><td>Cruzado (Cross-Over)</td></tr>
+        <tr><td>Router ↔ Router</td><td>Cruzado (Cross-Over)</td></tr>
+        <tr><td>PC ↔ PC (directo)</td><td>Cruzado (Cross-Over)</td></tr>
+        <tr><td>PC ↔ Puerto de consola del Router</td><td>Consola</td></tr>
+    </table>
+
+    <div class="caja-concepto">
+        <h4>💡 Por qué importa</h4>
+        <p>Los switches y routers modernos (incluidos los del Packet Tracer reciente) suelen tener <strong>Auto-MDIX</strong>, que detecta automáticamente el tipo de cable necesario. Aun así, es fundamental conocer la regla clásica para exámenes y para equipos más antiguos que no tienen esta función.</p>
+    </div>
+
+    <h2>5. Checklist de verificación final</h2>
+    <div class="progreso-box" id="progresoTexto">0 / 7 pasos completados</div>
+    <ul class="checklist" id="checklistLab">
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Los 6 dispositivos están correctamente ubicados y nombrados</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> PC0, PC1 y Server0 están conectados al switch con cable recto</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> El switch está conectado al router con cable recto</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> El Access Point está conectado al router con cable recto</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> La laptop tiene módulo inalámbrico instalado y está asociada al Access Point</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Todos los indicadores de enlace están en verde</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se exploró la vista Physical y se identificó cada dispositivo</label></li>
+    </ul>
+
+    <h2>6. Preguntas de reflexión</h2>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">1. ¿Por qué se usa cable recto entre el PC y el switch, pero cruzado entre dos switches?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">2. ¿Qué diferencia física existe entre la conexión de la Laptop0 y la de los PC0/PC1?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">3. Si quisieras extender la señal Wi-Fi a otra oficina más alejada, ¿qué dispositivo adicional usarías?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn-enviar" id="btnEnviarLab">Enviar confirmación de laboratorio</button>
+    <div class="estado-envio" id="estadoEnvio"></div>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Clase 1 · Laboratorio Packet Tracer</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — PEGAR ACÁ LA URL DE TU GOOGLE APPS SCRIPT
+//
+// 1. Abrí tu planilla de Google Sheets para "Clase 1 - Laboratorio"
+// 2. Extensiones → Apps Script → pegá el script → Implementar →
+//    Nueva implementación → Aplicación web → Copiá la URL (.../exec)
+// 3. Reemplazá el texto de abajo, entre comillas, por esa URL
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHZbMnK7E7b9zp53cRb739DEKm99g5UoLF9-EX9TAE18pgRR86MPkUbGxTx-szb8C3dg/exec";
+const NOMBRE_CLASE = "Clase 1 - Laboratorio";
+// ═══════════════════════════════════════════════════════════════
+
+const checks = document.querySelectorAll('.check-item');
+const progresoTexto = document.getElementById('progresoTexto');
+
+function actualizarProgreso() {
+    let completados = 0;
+    checks.forEach(c => {
+        const li = c.closest('li');
+        if (c.checked) {
+            completados++;
+            li.classList.add('tildado');
+        } else {
+            li.classList.remove('tildado');
+        }
+    });
+    progresoTexto.textContent = `${completados} / ${checks.length} pasos completados`;
+    return completados;
+}
+
+checks.forEach(c => c.addEventListener('change', actualizarProgreso));
+actualizarProgreso();
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando confirmación...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Confirmación enviada a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnEnviarLab').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    // Validar preguntas de reflexión
+    const textareas = document.querySelectorAll('.respuesta-reflexion');
+    let faltante = null;
+    textareas.forEach(t => {
+        if (!t.value.trim()) {
+            t.classList.add('campo-error');
+            if (!faltante) faltante = t;
+        } else {
+            t.classList.remove('campo-error');
+        }
+    });
+    if (faltante) {
+        faltante.focus();
+        faltante.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+
+    const completados = actualizarProgreso();
+    const total = checks.length;
+    const porcentaje = Math.round((completados / total) * 100);
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    const respuestas = Array.from(textareas).map((t, i) => {
+        const pregunta = t.closest('.pregunta-reflexion').querySelector('.texto-pregunta').textContent.trim();
+        return `${pregunta} => ${t.value.trim()}`;
+    }).join(' | ');
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: completados,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora,
+        respuestas: respuestas
+    });
+
+    this.disabled = true;
+    this.textContent = 'Confirmación enviada ✓';
+});
+</script>
+</body>
+</html>

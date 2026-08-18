@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio - Clase 10: Diseño Jerárquico</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 880px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    h2 {
+        color: #764ba2;
+        font-size: 1.3em;
+        margin: 25px 0 12px 0;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 6px;
+    }
+
+    p, li { color: #333; font-size: 0.92em; line-height: 1.55; margin-bottom: 6px; }
+    ul, ol { margin-left: 22px; margin-bottom: 10px; }
+    strong { color: #667eea; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 16px 20px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+    }
+
+    .badge-pt {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        font-size: 0.75em;
+        padding: 3px 10px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        font-weight: bold;
+    }
+
+    .caja-concepto {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        padding: 10px 14px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    .caja-concepto h4 { color: #667eea; margin-bottom: 5px; font-size: 1em; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+        font-size: 0.85em;
+    }
+    th, td { border: 1px solid #667eea; padding: 8px; text-align: left; }
+    th { background: #667eea; color: white; }
+    tr:nth-child(even) { background: #f8f9ff; }
+
+    .paso {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 14px;
+        align-items: flex-start;
+    }
+
+    .paso-num {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        background: #667eea;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9em;
+    }
+
+    .paso-contenido { flex: 1; }
+    .paso-titulo { font-weight: bold; color: #333; margin-bottom: 3px; font-size: 0.95em; }
+
+    .checklist { list-style: none; margin-left: 0; }
+    .checklist li {
+        padding: 10px 12px;
+        background: #f8f9ff;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        margin-bottom: 6px;
+        font-size: 0.9em;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .checklist li:hover { background: #eef1ff; }
+    .checklist li input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-top: 1px;
+        accent-color: #667eea;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .checklist li.tildado { background: #e8f9ee; border-color: #34c26a; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin: 20px 0;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .progreso-box {
+        text-align: center;
+        font-size: 0.85em;
+        color: #667eea;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .btn-enviar {
+        display: block;
+        margin: 15px auto 10px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-enviar:hover { background: #5568d3; }
+    .btn-enviar:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+
+    .pregunta-reflexion {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 6px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+    }
+    .pregunta-reflexion .texto-pregunta {
+        font-weight: bold;
+        color: #333;
+        font-size: 0.92em;
+        margin-bottom: 8px;
+    }
+    .pregunta-reflexion textarea {
+        width: 100%;
+        min-height: 70px;
+        padding: 10px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 0.9em;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+    .pregunta-reflexion textarea:focus { outline: 2px solid #667eea; }
+    .pregunta-reflexion textarea.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .pie { text-align: center; margin-top: 25px; font-size: 0.85em; color: #888; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <h1>🧪 Laboratorio</h1>
+    <p class="subtitulo">Clase 10 — Diseño Jerárquico, Nube y Sistemas Numéricos</p>
+    <span class="badge-pt">💻 Cisco Packet Tracer</span>
+
+    <div class="intro-box">
+        <strong>Objetivo:</strong> Construir una red jerárquica simplificada de 3 capas (Core, Distribution, Access) con redundancia, comprobar que la caída de un switch no interrumpe el servicio, y practicar conversión entre sistemas numéricos aplicada a direccionamiento real.
+    </div>
+
+    <h2>1. Materiales necesarios</h2>
+    <ul>
+        <li>Cisco Packet Tracer (versión 8.x o superior)</li>
+        <li>2 Switches Core (2960 o superior)</li>
+        <li>2 Switches Distribution (2960)</li>
+        <li>2 Switches Access (2960)</li>
+        <li>4 PC de escritorio (PC-PT)</li>
+        <li>Cables rectos (Copper Straight-Through)</li>
+    </ul>
+
+    <h2>2. Topología a construir</h2>
+    <ul>
+        <li><strong>Capa Core:</strong> Core0 y Core1, conectados entre sí</li>
+        <li><strong>Capa Distribution:</strong> Dist0 y Dist1, cada uno conectado a AMBOS switches Core (redundancia)</li>
+        <li><strong>Capa Access:</strong> Access0 conectado a Dist0 y Dist1; Access1 conectado a Dist0 y Dist1 (redundancia también en esta capa)</li>
+        <li><strong>PC0 y PC1</strong> conectados a Access0; <strong>PC2 y PC3</strong> conectados a Access1</li>
+    </ul>
+
+    <h2>3. Guía paso a paso</h2>
+
+    <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Armar la topología de 3 capas</div>
+            <p>Colocá los 6 switches y 4 PCs, y conectalos según el punto 2. Prestá atención a las conexiones redundantes: cada switch de Distribution debe llegar a AMBOS Core, y cada switch de Access debe llegar a AMBOS Distribution.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Direccionar los PCs</div>
+            <p>Asigná a los 4 PCs direcciones IP dentro de la misma red (por ejemplo 192.168.1.0/24), para simplificar y enfocarnos en la topología física.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Verificar conectividad de base</div>
+            <p>Hacé ping entre PC0 y PC2 (que están en switches de Access distintos). Debería funcionar correctamente atravesando toda la jerarquía.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Simular la caída de un switch de Distribution</div>
+            <p>Apagá (click derecho → o quitando el cable de alimentación, o usando <code>shutdown</code> en las interfaces) el Dist0. Repetí el ping entre PC0 y PC2.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">5</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Confirmar que la redundancia funcionó</div>
+            <p>El ping debería seguir funcionando (con algo más de latencia inicial mientras el switch reconverge), porque el tráfico puede seguir fluyendo a través de Dist1. Si falla, revisá que Dist1 esté realmente conectado a ambos switches Core y Access.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">6</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Restaurar y comparar con un diseño sin redundancia</div>
+            <p>Volvé a encender Dist0. Como ejercicio mental (no hace falta reconstruirlo en Packet Tracer), pensá: si esta red NO tuviera doble conexión en cada capa y hubiera fallado el único switch de Distribution, ¿qué PCs se hubiesen quedado sin conexión?</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">7</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Ejercicio de sistemas numéricos aplicado</div>
+            <p>Tomá la dirección IP de PC0 (por ejemplo 192.168.1.10) y convertí cada octeto a binario a mano. Verificalo ejecutando en el PC0 → Command Prompt: <code>ipconfig</code> para confirmar la IP, y calculá también su equivalente hexadecimal (útil para comparar con el formato de las direcciones MAC, que ya están en hexadecimal).</p>
+        </div>
+    </div>
+
+    <h2>4. Checklist de verificación final</h2>
+    <div class="progreso-box" id="progresoTexto">0 / 6 pasos completados</div>
+    <ul class="checklist" id="checklistLab">
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Los 6 switches están conectados con redundancia en cada capa (core-distribution y distribution-access)</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Los 4 PCs están direccionados correctamente</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> El ping funciona correctamente entre PCs de distintos switches de Access</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se apagó un switch de Distribution y se confirmó que el servicio se mantuvo activo</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se restauró el switch y se verificó la vuelta a la normalidad</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se convirtió manualmente la IP de un PC a binario y hexadecimal</label></li>
+    </ul>
+
+    <h2>5. Preguntas de reflexión</h2>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">1. ¿Qué observaste (si algo) al hacer ping justo en el momento en que apagaste Dist0? ¿Hubo algún corte breve?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">2. En el ejercicio mental del paso 6: si la red NO tuviera redundancia y fallara el único switch de Distribution, ¿qué PCs quedarían aislados?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">3. Escribí acá la IP de tu PC0 convertida a binario (los 4 octetos) y su equivalente hexadecimal.</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn-enviar" id="btnEnviarLab">Enviar confirmación de laboratorio</button>
+    <div class="estado-envio" id="estadoEnvio"></div>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Clase 10 · Laboratorio Packet Tracer</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — PEGAR ACÁ LA URL DE TU GOOGLE APPS SCRIPT
+//
+// 1. Abrí tu planilla de Google Sheets para "Clase 10 - Laboratorio"
+// 2. Extensiones → Apps Script → pegá el script → Implementar →
+//    Nueva implementación → Aplicación web → Copiá la URL (.../exec)
+// 3. Reemplazá el texto de abajo, entre comillas, por esa URL
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHZbMnK7E7b9zp53cRb739DEKm99g5UoLF9-EX9TAE18pgRR86MPkUbGxTx-szb8C3dg/exec";
+const NOMBRE_CLASE = "Clase 10 - Laboratorio";
+// ═══════════════════════════════════════════════════════════════
+
+const checks = document.querySelectorAll('.check-item');
+const progresoTexto = document.getElementById('progresoTexto');
+
+function actualizarProgreso() {
+    let completados = 0;
+    checks.forEach(c => {
+        const li = c.closest('li');
+        if (c.checked) {
+            completados++;
+            li.classList.add('tildado');
+        } else {
+            li.classList.remove('tildado');
+        }
+    });
+    progresoTexto.textContent = `${completados} / ${checks.length} pasos completados`;
+    return completados;
+}
+
+checks.forEach(c => c.addEventListener('change', actualizarProgreso));
+actualizarProgreso();
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando confirmación...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Confirmación enviada a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnEnviarLab').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    // Validar preguntas de reflexión
+    const textareas = document.querySelectorAll('.respuesta-reflexion');
+    let faltante = null;
+    textareas.forEach(t => {
+        if (!t.value.trim()) {
+            t.classList.add('campo-error');
+            if (!faltante) faltante = t;
+        } else {
+            t.classList.remove('campo-error');
+        }
+    });
+    if (faltante) {
+        faltante.focus();
+        faltante.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+
+    const completados = actualizarProgreso();
+    const total = checks.length;
+    const porcentaje = Math.round((completados / total) * 100);
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    const respuestas = Array.from(textareas).map((t, i) => {
+        const pregunta = t.closest('.pregunta-reflexion').querySelector('.texto-pregunta').textContent.trim();
+        return `${pregunta} => ${t.value.trim()}`;
+    }).join(' | ');
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: completados,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora,
+        respuestas: respuestas
+    });
+
+    this.disabled = true;
+    this.textContent = 'Confirmación enviada ✓';
+});
+</script>
+</body>
+</html>

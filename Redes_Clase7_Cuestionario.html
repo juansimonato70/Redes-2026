@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario - Clase 7: ICMP y Diagnóstico</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 850px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        font-size: 0.9em;
+        color: #333;
+    }
+
+    .pregunta {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 8px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+        transition: border-color 0.2s;
+    }
+
+    .pregunta-num { color: #667eea; font-weight: bold; font-size: 0.85em; margin-bottom: 4px; }
+    .pregunta-texto { color: #222; font-size: 1em; font-weight: 600; margin-bottom: 10px; }
+
+    .opciones { list-style: none; }
+
+    .opcion {
+        display: block;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        background: white;
+        border: 1px solid #d8ddf5;
+        color: #333;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .opcion:hover { background: #eef1ff; }
+    .opcion input { margin-right: 8px; }
+
+    /* Estado tras corregir */
+    .pregunta.corregida .opcion { cursor: default; }
+    .pregunta.corregida .opcion:hover { background: white; }
+    .pregunta.corregida .opcion.marcar-correcta {
+        background: #e8f9ee; border-color: #34c26a; color: #1e7a41; font-weight: bold;
+    }
+    .pregunta.corregida .opcion.marcar-incorrecta {
+        background: #fdecec; border-color: #e35a5a; color: #a33131;
+    }
+
+    .justificacion {
+        display: none;
+        margin-top: 8px;
+        font-size: 0.82em;
+        color: #555;
+        font-style: italic;
+        border-top: 1px dashed #d8ddf5;
+        padding-top: 6px;
+    }
+    .pregunta.corregida .justificacion { display: block; }
+
+    .icono-resultado { font-weight: bold; margin-right: 4px; }
+
+    .btn-corregir {
+        display: block;
+        margin: 10px auto 25px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-corregir:hover { background: #5568d3; }
+    .btn-corregir:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .resultado-final {
+        display: none;
+        text-align: center;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 0 0 25px 0;
+        border: 2px solid #667eea;
+    }
+    .resultado-final.mostrar { display: block; }
+    .resultado-final .puntaje { font-size: 2.2em; font-weight: bold; color: #667eea; }
+    .resultado-final .mensaje { font-size: 1em; color: #555; margin-top: 6px; }
+    .resultado-final.aprobado { background: #e8f9ee; border-color: #34c26a; }
+    .resultado-final.aprobado .puntaje { color: #1e7a41; }
+    .resultado-final.reprobado { background: #fff6e8; border-color: #f0a63c; }
+    .resultado-final.reprobado .puntaje { color: #b3711a; }
+
+    .pie { text-align: center; margin-top: 10px; font-size: 0.85em; color: #888; }
+
+    .aviso-incompleto {
+        display: none;
+        text-align: center;
+        color: #a33131;
+        background: #fdecec;
+        border: 1px solid #e35a5a;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+    }
+    .aviso-incompleto.mostrar { display: block; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <h1>📋 Cuestionario</h1>
+    <p class="subtitulo">Clase 7 — ICMP y Herramientas de Diagnóstico</p>
+
+    <div class="intro-box">
+        Respondé las 12 preguntas y presioná <strong>"Corregir cuestionario"</strong> al final. Vas a ver tu puntaje y la justificación de cada respuesta correcta.
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <div id="resultadoFinal" class="resultado-final">
+        <div class="puntaje" id="puntajeTexto"></div>
+        <div class="mensaje" id="mensajeTexto"></div>
+        <div class="estado-envio" id="estadoEnvio"></div>
+    </div>
+
+    <div id="avisoIncompleto" class="aviso-incompleto">⚠️ Respondé todas las preguntas antes de corregir.</div>
+
+    <form id="quizForm">
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 1</div>
+            <div class="pregunta-texto">¿Qué función cumple principalmente el protocolo ICMP?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q1" value="0"> Transportar datos de forma confiable como TCP</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="1"> Asignar direcciones IP automáticamente</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="2"> Enviar mensajes de control y notificaciones de error entre dispositivos</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="3"> Cifrar el tráfico de red</label></li>
+            </ul>
+            <div class="justificacion">ICMP está diseñado para enviar mensajes de control y reportar errores, no para transportar datos de aplicación.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 2</div>
+            <div class="pregunta-texto">¿ICMP hace que el protocolo IP sea confiable?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q2" value="0"> Sí, garantiza que todos los paquetes lleguen a destino</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="1"> No, solo informa sobre problemas; no garantiza la entrega</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="2"> Sí, pero solo en IPv6</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="3"> ICMP reemplaza completamente a IP</label></li>
+            </ul>
+            <div class="justificacion">ICMP no hace confiable a IP: simplemente proporciona información sobre problemas en la red, pero los propios mensajes ICMP pueden perderse igual que cualquier datagrama IP.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 3</div>
+            <div class="pregunta-texto">¿Qué tipo y código ICMP usa el comando ping para la solicitud (request)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q3" value="0"> Tipo 8 - Echo Request</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="1"> Tipo 0 - Echo Reply</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="2"> Tipo 3 - Destination Unreachable</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="3"> Tipo 11 - Time Exceeded</label></li>
+            </ul>
+            <div class="justificacion">Ping envía un mensaje ICMP Tipo 8 (Echo Request) y espera un Tipo 0 (Echo Reply) como respuesta.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 4</div>
+            <div class="pregunta-texto">¿Qué mecanismo usa traceroute para descubrir cada router en el camino hacia el destino?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q4" value="0"> Consulta directamente al servidor DNS</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="1"> Envía un mensaje ARP a cada router</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="2"> Usa el protocolo SNMP</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="3"> Envía paquetes con TTL incremental (1, 2, 3...) y recibe un mensaje Time Exceeded de cada salto</label></li>
+            </ul>
+            <div class="justificacion">Traceroute incrementa el TTL en cada envío; cuando el TTL llega a 0 en un router, este responde con ICMP Time Exceeded (Tipo 11), revelando así cada salto de la ruta.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 5</div>
+            <div class="pregunta-texto">¿Qué mensaje ICMP recibirías si intentás llegar a un host que no responde y el router intermedio determina que no hay ruta hacia él?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q5" value="0"> Echo Reply</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="1"> Destination Unreachable (Tipo 3)</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="2"> Redirect (Tipo 5)</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="3"> Ningún mensaje, la conexión simplemente se corta</label></li>
+            </ul>
+            <div class="justificacion">Cuando un destino no puede ser alcanzado, el router responde con un mensaje ICMP Tipo 3 (Destination Unreachable), con distintos códigos según la causa específica.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 6</div>
+            <div class="pregunta-texto">¿Qué función adicional cumple ICMPv6 que ICMPv4 no tiene?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q6" value="0"> Cifrado de extremo a extremo</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="1"> Traducción de direcciones (NAT)</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="2"> Neighbor Discovery Protocol (NDP), que reemplaza la función de ARP</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="3"> Asignación de puertos</label></li>
+            </ul>
+            <div class="justificacion">ICMPv6 incluye el Neighbor Discovery Protocol (mensajes tipo 133-137), que cumple en IPv6 la función que ARP cumple en IPv4.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 7</div>
+            <div class="pregunta-texto">¿Cuál de los siguientes es un ataque que explota ICMP?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q7" value="0"> SQL Injection</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="1"> Ping of Death (paquetes ICMP mal formados o excesivamente grandes)</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="2"> Phishing</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="3"> Cross-site scripting</label></li>
+            </ul>
+            <div class="justificacion">Ping of Death envía paquetes ICMP mal formados o demasiado grandes para intentar provocar fallas en el sistema destino.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 8</div>
+            <div class="pregunta-texto">Si un firewall bloquea completamente ICMP, ¿qué consecuencia práctica tiene esto para el diagnóstico de red?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q8" value="0"> Ping y traceroute dejan de funcionar o dan resultados engañosos, aunque el host puede estar activo</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="1"> Internet deja de funcionar por completo</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="2"> No tiene ningún efecto</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="3"> HTTP deja de funcionar</label></li>
+            </ul>
+            <div class="justificacion">Bloquear ICMP hace que ping/traceroute parezcan indicar que el host está caído (falso negativo), aunque el servicio real (por ejemplo HTTP) puede estar funcionando perfectamente.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 9</div>
+            <div class="pregunta-texto">¿Qué comando usarías para ver la configuración de red (IP, máscara, gateway, DNS) de tu propia PC en Windows?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q9" value="0"> netstat -an</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="1"> nslookup</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="2"> ipconfig /all</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="3"> telnet</label></li>
+            </ul>
+            <div class="justificacion">ipconfig /all muestra la configuración completa de red en Windows: IP, máscara, gateway, DNS, MAC, estado DHCP, etc.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 10</div>
+            <div class="pregunta-texto">¿Para qué sirve el comando netstat?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q10" value="0"> Resolver nombres de dominio</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="1"> Ver las conexiones activas y puertos en uso en el equipo</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="2"> Configurar el gateway predeterminado</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="3"> Enviar mensajes ICMP</label></li>
+            </ul>
+            <div class="justificacion">netstat muestra las conexiones de red activas, puertos abiertos y estadísticas por protocolo — útil para saber qué aplicaciones están usando la red.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 11</div>
+            <div class="pregunta-texto">Estás diagnosticando "no puedo acceder a www.ejemplo.com". El ping a 8.8.8.8 funciona, pero nslookup no resuelve el nombre. ¿Cuál es el problema más probable?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q11" value="0"> El cable de red está desconectado</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="1"> El ISP está caído por completo</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="2"> El firewall bloquea todo el tráfico</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="3"> Hay un problema con la resolución DNS, aunque la conectividad IP básica funciona</label></li>
+            </ul>
+            <div class="justificacion">Si el ping a una IP funciona pero nslookup no resuelve nombres, la conectividad básica está bien pero hay un problema específico de DNS (por ejemplo, servidor DNS mal configurado o caído).</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 12</div>
+            <div class="pregunta-texto">¿Qué comando usarías para verificar si un servidor web está escuchando específicamente en el puerto 80?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q12" value="0"> telnet ejemplo.com 80</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="1"> ping ejemplo.com</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="2"> ipconfig /all</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="3"> arp -a</label></li>
+            </ul>
+            <div class="justificacion">telnet ejemplo.com 80 intenta conectar específicamente a ese puerto; si conecta, el puerto está abierto y el servicio está escuchando.</div>
+        </div>
+
+        <button type="button" class="btn-corregir" id="btnCorregir">Corregir cuestionario</button>
+    </form>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Clase 7</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — PEGAR ACÁ LA URL DE TU GOOGLE APPS SCRIPT
+//
+// 1. Abrí tu planilla de Google Sheets para "Clase 1 - Cuestionario"
+// 2. Extensiones → Apps Script → pegá el script → Implementar →
+//    Nueva implementación → Aplicación web → Copiá la URL (.../exec)
+// 3. Reemplazá el texto de abajo, entre comillas, por esa URL
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVDS5dMEVVzg363GJJk9dBBqjS5MeN0iaDuMiL6_eNI7R1xxq2U21c_SZ8mwnE9Na5aA/exec";
+const NOMBRE_CLASE = "Clase 7 - Cuestionario";
+// ═══════════════════════════════════════════════════════════════
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando resultado...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Resultado enviado a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar el resultado. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnCorregir').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    const preguntas = document.querySelectorAll('.pregunta');
+    let respondidas = 0;
+    preguntas.forEach(p => {
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        if (document.querySelector(`input[name=${nombreQ}]:checked`)) respondidas++;
+    });
+
+    const aviso = document.getElementById('avisoIncompleto');
+    if (respondidas < preguntas.length) {
+        aviso.classList.add('mostrar');
+        return;
+    }
+    aviso.classList.remove('mostrar');
+
+    let correctas = 0;
+    preguntas.forEach(p => {
+        const correctaIdx = p.getAttribute('data-correcta');
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        const seleccionado = document.querySelector(`input[name=${nombreQ}]:checked`);
+        const opciones = p.querySelectorAll('.opcion');
+
+        opciones.forEach((op, idx) => {
+            const input = op.querySelector('input');
+            input.disabled = true;
+            if (idx == correctaIdx) {
+                op.classList.add('marcar-correcta');
+            } else if (seleccionado && idx == seleccionado.value) {
+                op.classList.add('marcar-incorrecta');
+            }
+        });
+
+        p.classList.add('corregida');
+        if (seleccionado && seleccionado.value == correctaIdx) correctas++;
+    });
+
+    const total = preguntas.length;
+    const resultado = document.getElementById('resultadoFinal');
+    const puntajeTexto = document.getElementById('puntajeTexto');
+    const mensajeTexto = document.getElementById('mensajeTexto');
+
+    const porcentaje = Math.round((correctas / total) * 100);
+    puntajeTexto.textContent = `${correctas} / ${total} correctas (${porcentaje}%)`;
+
+    resultado.classList.add('mostrar');
+    if (porcentaje >= 60) {
+        resultado.classList.add('aprobado');
+        mensajeTexto.textContent = '¡Muy bien! Revisá las justificaciones para reforzar lo que falte.';
+    } else {
+        resultado.classList.add('reprobado');
+        mensajeTexto.textContent = 'Te conviene repasar la clase antes de seguir. Revisá cada justificación.';
+    }
+
+    resultado.scrollIntoView({behavior: 'smooth'});
+    this.disabled = true;
+    this.textContent = 'Cuestionario corregido ✓';
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: correctas,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora
+    });
+});
+</script>
+</body>
+</html>

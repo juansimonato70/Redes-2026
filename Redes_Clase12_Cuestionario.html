@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario - Clase 12: Solución de Problemas y Soporte</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 850px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        font-size: 0.9em;
+        color: #333;
+    }
+
+    .pregunta {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 8px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+        transition: border-color 0.2s;
+    }
+
+    .pregunta-num { color: #667eea; font-weight: bold; font-size: 0.85em; margin-bottom: 4px; }
+    .pregunta-texto { color: #222; font-size: 1em; font-weight: 600; margin-bottom: 10px; }
+
+    .opciones { list-style: none; }
+
+    .opcion {
+        display: block;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        background: white;
+        border: 1px solid #d8ddf5;
+        color: #333;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .opcion:hover { background: #eef1ff; }
+    .opcion input { margin-right: 8px; }
+
+    /* Estado tras corregir */
+    .pregunta.corregida .opcion { cursor: default; }
+    .pregunta.corregida .opcion:hover { background: white; }
+    .pregunta.corregida .opcion.marcar-correcta {
+        background: #e8f9ee; border-color: #34c26a; color: #1e7a41; font-weight: bold;
+    }
+    .pregunta.corregida .opcion.marcar-incorrecta {
+        background: #fdecec; border-color: #e35a5a; color: #a33131;
+    }
+
+    .justificacion {
+        display: none;
+        margin-top: 8px;
+        font-size: 0.82em;
+        color: #555;
+        font-style: italic;
+        border-top: 1px dashed #d8ddf5;
+        padding-top: 6px;
+    }
+    .pregunta.corregida .justificacion { display: block; }
+
+    .icono-resultado { font-weight: bold; margin-right: 4px; }
+
+    .btn-corregir {
+        display: block;
+        margin: 10px auto 25px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-corregir:hover { background: #5568d3; }
+    .btn-corregir:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .resultado-final {
+        display: none;
+        text-align: center;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 0 0 25px 0;
+        border: 2px solid #667eea;
+    }
+    .resultado-final.mostrar { display: block; }
+    .resultado-final .puntaje { font-size: 2.2em; font-weight: bold; color: #667eea; }
+    .resultado-final .mensaje { font-size: 1em; color: #555; margin-top: 6px; }
+    .resultado-final.aprobado { background: #e8f9ee; border-color: #34c26a; }
+    .resultado-final.aprobado .puntaje { color: #1e7a41; }
+    .resultado-final.reprobado { background: #fff6e8; border-color: #f0a63c; }
+    .resultado-final.reprobado .puntaje { color: #b3711a; }
+
+    .pie { text-align: center; margin-top: 10px; font-size: 0.85em; color: #888; }
+
+    .aviso-incompleto {
+        display: none;
+        text-align: center;
+        color: #a33131;
+        background: #fdecec;
+        border: 1px solid #e35a5a;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+    }
+    .aviso-incompleto.mostrar { display: block; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <h1>📋 Cuestionario</h1>
+    <p class="subtitulo">Clase 12 — Solución de Problemas y Soporte de Red</p>
+
+    <div class="intro-box">
+        Respondé las 12 preguntas y presioná <strong>"Corregir cuestionario"</strong> al final. Vas a ver tu puntaje y la justificación de cada respuesta correcta.
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <div id="resultadoFinal" class="resultado-final">
+        <div class="puntaje" id="puntajeTexto"></div>
+        <div class="mensaje" id="mensajeTexto"></div>
+        <div class="estado-envio" id="estadoEnvio"></div>
+    </div>
+
+    <div id="avisoIncompleto" class="aviso-incompleto">⚠️ Respondé todas las preguntas antes de corregir.</div>
+
+    <form id="quizForm">
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 1</div>
+            <div class="pregunta-texto">¿Qué metodología de troubleshooting comienza revisando la capa física y va subiendo capa por capa hasta la aplicación?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q1" value="0"> Top-Down</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="1"> Divide and Conquer</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="2"> Bottom-Up</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="3"> Follow the Path</label></li>
+            </ul>
+            <div class="justificacion">Bottom-Up empieza en la capa física (cables, conexiones) y va subiendo progresivamente hacia la capa de aplicación.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 2</div>
+            <div class="pregunta-texto">¿Por qué es importante mantener actualizada la documentación de red (diagramas, inventario, configuraciones)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q2" value="0"> Es solo un requisito burocrático sin utilidad práctica</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="1"> Acelera drásticamente el diagnóstico y la resolución de problemas futuros</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="2"> Reemplaza la necesidad de monitoreo</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="3"> Solo sirve para auditorías legales</label></li>
+            </ul>
+            <div class="justificacion">Una documentación actualizada permite entender rápidamente la topología y configuración de la red al diagnosticar un problema, ahorrando tiempo valioso.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 3</div>
+            <div class="pregunta-texto">En el modelo de niveles (tiers) de un Help Desk, ¿qué caracteriza al Tier 1?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q3" value="0"> Resuelve únicamente problemas de configuración de routers core</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="1"> Solo atiende emergencias críticas</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="2"> Está compuesto exclusivamente por ingenieros senior</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="3"> Es el primer contacto con el usuario, resolviendo problemas básicos y comunes</label></li>
+            </ul>
+            <div class="justificacion">El Tier 1 es el primer nivel de soporte, encargado de resolver problemas básicos y comunes; los casos más complejos se escalan a Tier 2 o Tier 3.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 4</div>
+            <div class="pregunta-texto">¿Qué significa la métrica FCR (First Contact Resolution) en un help desk?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q4" value="0"> El porcentaje de tickets resueltos en el primer contacto con el usuario, sin necesitar escalarlos ni volver a contactarlo</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="1"> El tiempo que tarda un ticket en ser creado</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="2"> La cantidad de tickets abiertos por día</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="3"> El costo promedio de cada ticket</label></li>
+            </ul>
+            <div class="justificacion">FCR mide qué porcentaje de los casos se resuelven completamente en el primer contacto, una métrica clave de eficiencia del help desk.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 5</div>
+            <div class="pregunta-texto">Ante un problema de "sin conectividad de red" en un dispositivo final, ¿cuál es el primer paso lógico a verificar?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q5" value="0"> Reinstalar el sistema operativo completo</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="1"> La conexión física (cable conectado, luces de enlace)</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="2"> Cambiar el servidor DNS de toda la empresa</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="3"> Escalar directamente a Tier 3</label></li>
+            </ul>
+            <div class="justificacion">Siguiendo el enfoque Bottom-Up, lo primero es verificar la capa física: si el cable está conectado y hay luces de enlace activas.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 6</div>
+            <div class="pregunta-texto">¿Qué estrategia de diagnóstico usa el "ping progresivo" (gateway → IP pública → dominio)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q6" value="0"> Verifica solamente la velocidad de la conexión</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="1"> Reemplaza la necesidad de revisar cables</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="2"> Aísla progresivamente en qué punto de la ruta (local, ISP, o DNS) está el problema</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="3"> Solo sirve para probar servidores web</label></li>
+            </ul>
+            <div class="justificacion">Al hacer ping progresivamente a puntos cada vez más lejanos, se puede aislar en qué tramo específico (red local, ISP, o resolución DNS) se encuentra el problema.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 7</div>
+            <div class="pregunta-texto">Cuando se reporta que "toda la red está caída" (no solo un usuario), ¿qué se debería revisar primero?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q7" value="0"> Los dispositivos core (switches/routers centrales) antes que los dispositivos individuales</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="1"> La PC de cada usuario una por una</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="2"> Solo el navegador web de un usuario al azar</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="3"> Nada, hay que esperar a que se resuelva solo</label></li>
+            </ul>
+            <div class="justificacion">Ante un problema que afecta a toda la red, tiene más sentido revisar primero los dispositivos centrales (core), ya que una falla ahí explica el impacto masivo.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 8</div>
+            <div class="pregunta-texto">¿Qué ventaja aporta el monitoreo proactivo de red frente al enfoque puramente reactivo?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q8" value="0"> Elimina por completo la necesidad de troubleshooting</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="1"> Es más barato pero menos efectivo</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="2"> Solo sirve para redes muy pequeñas</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="3"> Permite identificar y resolver problemas antes de que afecten a los usuarios</label></li>
+            </ul>
+            <div class="justificacion">El monitoreo proactivo detecta tendencias o fallas incipientes antes de que se conviertan en un problema visible para el usuario final.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 9</div>
+            <div class="pregunta-texto">¿Qué consideración es importante al brindar soporte remoto a un usuario?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q9" value="0"> Acceder a archivos personales sin avisar, para ganar tiempo</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="1"> Respetar la privacidad del usuario y usar herramientas de acceso remoto adecuadas</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="2"> No es necesario explicarle nada al usuario durante la sesión</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="3"> Siempre es mejor que el soporte presencial en todos los casos</label></li>
+            </ul>
+            <div class="justificacion">El soporte remoto requiere herramientas apropiadas y un respeto constante por la privacidad y el consentimiento del usuario.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 10</div>
+            <div class="pregunta-texto">¿Por qué se dice que "si no está documentado, no pasó" en el contexto de troubleshooting?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q10" value="0"> Porque la documentación es más importante que resolver el problema</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="1"> Es solo una frase sin aplicación real</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="2"> Porque sin registro escrito de lo que se probó y su resultado, se pierde el conocimiento para futuros casos similares</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="3"> Porque los sistemas legales lo exigen siempre</label></li>
+            </ul>
+            <div class="justificacion">Documentar cada paso del troubleshooting (qué se probó, qué resultado dio) construye una base de conocimiento invaluable para diagnósticos futuros.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 11</div>
+            <div class="pregunta-texto">¿Qué componente de un sistema de ticketing ayuda a priorizar qué casos atender primero?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q11" value="0"> El nivel de prioridad y el SLA (Service Level Agreement) asociado</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="1"> El color de fondo del ticket</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="2"> La cantidad de veces que el usuario llamó</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="3"> El nombre del técnico asignado</label></li>
+            </ul>
+            <div class="justificacion">La prioridad y el SLA definen los tiempos de respuesta esperados, ayudando a organizar qué tickets requieren atención más urgente.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 12</div>
+            <div class="pregunta-texto">¿Por qué la comunicación efectiva con el usuario es tan importante como las habilidades técnicas en soporte de red?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q12" value="0"> No lo es, solo importa la solución técnica</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="1"> Porque reemplaza la necesidad de resolver el problema técnico</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="2"> Solo importa en soporte presencial, no remoto</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="3"> Porque ayuda a entender correctamente el problema, explicar la solución con claridad y generar confianza con el usuario</label></li>
+            </ul>
+            <div class="justificacion">Una buena comunicación ayuda a diagnosticar mejor el problema real (a partir de lo que cuenta el usuario) y a que este entienda y confíe en la solución brindada.</div>
+        </div>
+
+        <button type="button" class="btn-corregir" id="btnCorregir">Corregir cuestionario</button>
+    </form>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Clase 12</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — PEGAR ACÁ LA URL DE TU GOOGLE APPS SCRIPT
+//
+// 1. Abrí tu planilla de Google Sheets para "Clase 1 - Cuestionario"
+// 2. Extensiones → Apps Script → pegá el script → Implementar →
+//    Nueva implementación → Aplicación web → Copiá la URL (.../exec)
+// 3. Reemplazá el texto de abajo, entre comillas, por esa URL
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVDS5dMEVVzg363GJJk9dBBqjS5MeN0iaDuMiL6_eNI7R1xxq2U21c_SZ8mwnE9Na5aA/exec";
+const NOMBRE_CLASE = "Clase 12 - Cuestionario";
+// ═══════════════════════════════════════════════════════════════
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando resultado...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Resultado enviado a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar el resultado. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnCorregir').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    const preguntas = document.querySelectorAll('.pregunta');
+    let respondidas = 0;
+    preguntas.forEach(p => {
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        if (document.querySelector(`input[name=${nombreQ}]:checked`)) respondidas++;
+    });
+
+    const aviso = document.getElementById('avisoIncompleto');
+    if (respondidas < preguntas.length) {
+        aviso.classList.add('mostrar');
+        return;
+    }
+    aviso.classList.remove('mostrar');
+
+    let correctas = 0;
+    preguntas.forEach(p => {
+        const correctaIdx = p.getAttribute('data-correcta');
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        const seleccionado = document.querySelector(`input[name=${nombreQ}]:checked`);
+        const opciones = p.querySelectorAll('.opcion');
+
+        opciones.forEach((op, idx) => {
+            const input = op.querySelector('input');
+            input.disabled = true;
+            if (idx == correctaIdx) {
+                op.classList.add('marcar-correcta');
+            } else if (seleccionado && idx == seleccionado.value) {
+                op.classList.add('marcar-incorrecta');
+            }
+        });
+
+        p.classList.add('corregida');
+        if (seleccionado && seleccionado.value == correctaIdx) correctas++;
+    });
+
+    const total = preguntas.length;
+    const resultado = document.getElementById('resultadoFinal');
+    const puntajeTexto = document.getElementById('puntajeTexto');
+    const mensajeTexto = document.getElementById('mensajeTexto');
+
+    const porcentaje = Math.round((correctas / total) * 100);
+    puntajeTexto.textContent = `${correctas} / ${total} correctas (${porcentaje}%)`;
+
+    resultado.classList.add('mostrar');
+    if (porcentaje >= 60) {
+        resultado.classList.add('aprobado');
+        mensajeTexto.textContent = '¡Muy bien! Revisá las justificaciones para reforzar lo que falte.';
+    } else {
+        resultado.classList.add('reprobado');
+        mensajeTexto.textContent = 'Te conviene repasar la clase antes de seguir. Revisá cada justificación.';
+    }
+
+    resultado.scrollIntoView({behavior: 'smooth'});
+    this.disabled = true;
+    this.textContent = 'Cuestionario corregido ✓';
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: correctas,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora
+    });
+});
+</script>
+</body>
+</html>

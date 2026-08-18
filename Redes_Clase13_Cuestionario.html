@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario - Clase 13: Amenazas y Ataques</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 850px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        font-size: 0.9em;
+        color: #333;
+    }
+
+    .pregunta {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 8px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+        transition: border-color 0.2s;
+    }
+
+    .pregunta-num { color: #667eea; font-weight: bold; font-size: 0.85em; margin-bottom: 4px; }
+    .pregunta-texto { color: #222; font-size: 1em; font-weight: 600; margin-bottom: 10px; }
+
+    .opciones { list-style: none; }
+
+    .opcion {
+        display: block;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        background: white;
+        border: 1px solid #d8ddf5;
+        color: #333;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .opcion:hover { background: #eef1ff; }
+    .opcion input { margin-right: 8px; }
+
+    /* Estado tras corregir */
+    .pregunta.corregida .opcion { cursor: default; }
+    .pregunta.corregida .opcion:hover { background: white; }
+    .pregunta.corregida .opcion.marcar-correcta {
+        background: #e8f9ee; border-color: #34c26a; color: #1e7a41; font-weight: bold;
+    }
+    .pregunta.corregida .opcion.marcar-incorrecta {
+        background: #fdecec; border-color: #e35a5a; color: #a33131;
+    }
+
+    .justificacion {
+        display: none;
+        margin-top: 8px;
+        font-size: 0.82em;
+        color: #555;
+        font-style: italic;
+        border-top: 1px dashed #d8ddf5;
+        padding-top: 6px;
+    }
+    .pregunta.corregida .justificacion { display: block; }
+
+    .icono-resultado { font-weight: bold; margin-right: 4px; }
+
+    .btn-corregir {
+        display: block;
+        margin: 10px auto 25px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-corregir:hover { background: #5568d3; }
+    .btn-corregir:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .resultado-final {
+        display: none;
+        text-align: center;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 0 0 25px 0;
+        border: 2px solid #667eea;
+    }
+    .resultado-final.mostrar { display: block; }
+    .resultado-final .puntaje { font-size: 2.2em; font-weight: bold; color: #667eea; }
+    .resultado-final .mensaje { font-size: 1em; color: #555; margin-top: 6px; }
+    .resultado-final.aprobado { background: #e8f9ee; border-color: #34c26a; }
+    .resultado-final.aprobado .puntaje { color: #1e7a41; }
+    .resultado-final.reprobado { background: #fff6e8; border-color: #f0a63c; }
+    .resultado-final.reprobado .puntaje { color: #b3711a; }
+
+    .pie { text-align: center; margin-top: 10px; font-size: 0.85em; color: #888; }
+
+    .aviso-incompleto {
+        display: none;
+        text-align: center;
+        color: #a33131;
+        background: #fdecec;
+        border: 1px solid #e35a5a;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+    }
+    .aviso-incompleto.mostrar { display: block; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <h1>📋 Cuestionario</h1>
+    <p class="subtitulo">Clase 13 — Amenazas, Vulnerabilidades y Ataques</p>
+
+    <div class="intro-box">
+        Respondé las 12 preguntas y presioná <strong>"Corregir cuestionario"</strong> al final. Vas a ver tu puntaje y la justificación de cada respuesta correcta.
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <div id="resultadoFinal" class="resultado-final">
+        <div class="puntaje" id="puntajeTexto"></div>
+        <div class="mensaje" id="mensajeTexto"></div>
+        <div class="estado-envio" id="estadoEnvio"></div>
+    </div>
+
+    <div id="avisoIncompleto" class="aviso-incompleto">⚠️ Respondé todas las preguntas antes de corregir.</div>
+
+    <form id="quizForm">
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 1</div>
+            <div class="pregunta-texto">¿Qué representan las siglas de la tríada CIA en seguridad informática?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q1" value="0"> Control, Inspección, Auditoría</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="1"> Confidencialidad, Integridad, Disponibilidad</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="2"> Cifrado, Identificación, Autorización</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="3"> Copias, Inventario, Antivirus</label></li>
+            </ul>
+            <div class="justificacion">La tríada CIA (Confidencialidad, Integridad, Disponibilidad) representa los tres pilares fundamentales de la seguridad de la información.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 2</div>
+            <div class="pregunta-texto">¿Qué diferencia principal hay entre un virus y un gusano (worm)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q2" value="0"> No hay ninguna diferencia real</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="1"> El gusano necesita que el usuario abra un archivo, el virus no</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="2"> El gusano se propaga automáticamente por la red sin necesitar intervención del usuario; el virus necesita adjuntarse a un archivo y que el usuario lo ejecute</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="3"> El virus solo afecta a servidores, el gusano solo a PCs</label></li>
+            </ul>
+            <div class="justificacion">Un gusano se autopropaga por la red de forma independiente; un virus necesita adjuntarse a un archivo/programa host y depende de que el usuario lo ejecute.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 3</div>
+            <div class="pregunta-texto">¿Qué tipo de malware cifra los archivos de la víctima y exige un pago para restaurarlos?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q3" value="0"> Ransomware</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="1"> Spyware</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="2"> Adware</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="3"> Un troyano de acceso remoto (RAT), sin cifrado</label></li>
+            </ul>
+            <div class="justificacion">El ransomware cifra los archivos de la víctima y exige un pago (rescate) a cambio de la clave de descifrado.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 4</div>
+            <div class="pregunta-texto">¿Por qué se dice que los usuarios son "el eslabón más débil" frente a la ingeniería social?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q4" value="0"> Porque los firewalls no protegen a los usuarios</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="1"> Porque los usuarios nunca reciben capacitación</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="2"> Porque no existen defensas técnicas contra la ingeniería social</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="3"> Porque la ingeniería social explota la psicología y confianza humana, algo que ninguna medida técnica puede bloquear por completo</label></li>
+            </ul>
+            <div class="justificacion">La ingeniería social ataca directamente a las personas (confianza, urgencia, miedo), evitando por completo las defensas técnicas del sistema.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 5</div>
+            <div class="pregunta-texto">¿Por qué se considera al phishing el "vector de ataque número 1"?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q5" value="0"> Porque solo afecta a empresas grandes</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="1"> Porque es una técnica barata, escalable y efectiva para engañar usuarios y obtener credenciales o instalar malware</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="2"> Porque requiere acceso físico al edificio</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="3"> Porque solo funciona contra sistemas Linux</label></li>
+            </ul>
+            <div class="justificacion">El phishing (correos/mensajes fraudulentos) es barato de ejecutar a gran escala y sigue siendo muy efectivo para robar credenciales o distribuir malware.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 6</div>
+            <div class="pregunta-texto">¿Qué es un ataque DDoS (Distributed Denial of Service)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q6" value="0"> Un método para robar contraseñas por fuerza bruta</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="1"> Un tipo de virus que se autoreplica en archivos Word</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="2"> Un ataque que satura un servicio con tráfico masivo desde múltiples fuentes, dejándolo inaccesible para usuarios legítimos</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="3"> Una técnica de cifrado de datos</label></li>
+            </ul>
+            <div class="justificacion">Un DDoS abruma un servicio con tráfico desde muchas fuentes distribuidas simultáneamente, agotando sus recursos y afectando la disponibilidad.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 7</div>
+            <div class="pregunta-texto">¿Qué es un ataque "Man-in-the-Middle" (MitM)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q7" value="0"> El atacante se interpone entre dos partes que se comunican, interceptando o alterando el tráfico sin que ninguna lo note</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="1"> Un ataque que solo afecta a impresoras de red</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="2"> Un tipo de spam masivo</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="3"> Un virus que se ejecuta al mediodía</label></li>
+            </ul>
+            <div class="justificacion">En un ataque Man-in-the-Middle, el atacante se posiciona entre dos partes comunicantes para interceptar, leer o modificar el tráfico sin ser detectado.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 8</div>
+            <div class="pregunta-texto">¿Qué caracteriza a un "Evil Twin" en el contexto de ataques a redes inalámbricas?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q8" value="0"> Un router doble para redundancia</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="1"> Un punto de acceso falso que imita a uno legítimo para engañar a los usuarios y capturar su tráfico</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="2"> Un tipo de cifrado WPA3</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="3"> Dos antenas en el mismo router</label></li>
+            </ul>
+            <div class="justificacion">Un Evil Twin es un punto de acceso Wi-Fi malicioso que imita el nombre (SSID) de una red legítima para engañar a los usuarios y capturar sus datos.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 9</div>
+            <div class="pregunta-texto">¿Qué es una inyección SQL (SQL Injection)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q9" value="0"> Un método de backup de bases de datos</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="1"> Un protocolo de red para bases de datos</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="2"> Un tipo de firewall para servidores SQL</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="3"> Una técnica de ataque de aplicación donde se insertan comandos SQL maliciosos en campos de entrada para manipular la base de datos</label></li>
+            </ul>
+            <div class="justificacion">La inyección SQL aprovecha campos de entrada mal validados para insertar comandos SQL maliciosos y manipular o extraer datos de la base de datos.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 10</div>
+            <div class="pregunta-texto">¿Qué diferencia hay entre "phishing" y "spear phishing"?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q10" value="0"> No hay diferencia, son sinónimos</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="1"> Spear phishing es solo por teléfono</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="2"> El phishing es masivo y genérico; el spear phishing está dirigido y personalizado a una persona u organización específica</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="3"> El phishing solo ocurre en redes sociales</label></li>
+            </ul>
+            <div class="justificacion">El phishing tradicional se envía masivamente sin personalización; el spear phishing está cuidadosamente dirigido a un individuo u organización específica, usando información real sobre la víctima.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 11</div>
+            <div class="pregunta-texto">¿Qué es el "pretexting" como técnica de ingeniería social?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q11" value="0"> Un tipo de cifrado de contraseñas</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="1"> Crear una historia o escenario falso creíble para ganar la confianza de la víctima y obtener información</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="2"> Un ataque exclusivamente técnico sin interacción humana</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="3"> Un método de backup automático</label></li>
+            </ul>
+            <div class="justificacion">El pretexting consiste en inventar una situación o identidad falsa y creíble para manipular a la víctima y que revele información o realice una acción.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 12</div>
+            <div class="pregunta-texto">¿Por qué los dispositivos móviles son un objetivo cada vez más atractivo para los atacantes?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q12" value="0"> Porque almacenan gran cantidad de datos personales y corporativos, y suelen tener menos controles de seguridad que una PC empresarial</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="1"> Porque no se pueden proteger de ninguna forma</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="2"> Porque nunca se conectan a redes WiFi</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="3"> Porque no tienen sistema operativo</label></li>
+            </ul>
+            <div class="justificacion">Los dispositivos móviles concentran muchísima información sensible y frecuentemente tienen controles de seguridad más laxos, haciéndolos un blanco atractivo.</div>
+        </div>
+
+        <button type="button" class="btn-corregir" id="btnCorregir">Corregir cuestionario</button>
+    </form>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Clase 13</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — PEGAR ACÁ LA URL DE TU GOOGLE APPS SCRIPT
+//
+// 1. Abrí tu planilla de Google Sheets para "Clase 1 - Cuestionario"
+// 2. Extensiones → Apps Script → pegá el script → Implementar →
+//    Nueva implementación → Aplicación web → Copiá la URL (.../exec)
+// 3. Reemplazá el texto de abajo, entre comillas, por esa URL
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVDS5dMEVVzg363GJJk9dBBqjS5MeN0iaDuMiL6_eNI7R1xxq2U21c_SZ8mwnE9Na5aA/exec";
+const NOMBRE_CLASE = "Clase 13 - Cuestionario";
+// ═══════════════════════════════════════════════════════════════
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando resultado...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Resultado enviado a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar el resultado. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnCorregir').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    const preguntas = document.querySelectorAll('.pregunta');
+    let respondidas = 0;
+    preguntas.forEach(p => {
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        if (document.querySelector(`input[name=${nombreQ}]:checked`)) respondidas++;
+    });
+
+    const aviso = document.getElementById('avisoIncompleto');
+    if (respondidas < preguntas.length) {
+        aviso.classList.add('mostrar');
+        return;
+    }
+    aviso.classList.remove('mostrar');
+
+    let correctas = 0;
+    preguntas.forEach(p => {
+        const correctaIdx = p.getAttribute('data-correcta');
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        const seleccionado = document.querySelector(`input[name=${nombreQ}]:checked`);
+        const opciones = p.querySelectorAll('.opcion');
+
+        opciones.forEach((op, idx) => {
+            const input = op.querySelector('input');
+            input.disabled = true;
+            if (idx == correctaIdx) {
+                op.classList.add('marcar-correcta');
+            } else if (seleccionado && idx == seleccionado.value) {
+                op.classList.add('marcar-incorrecta');
+            }
+        });
+
+        p.classList.add('corregida');
+        if (seleccionado && seleccionado.value == correctaIdx) correctas++;
+    });
+
+    const total = preguntas.length;
+    const resultado = document.getElementById('resultadoFinal');
+    const puntajeTexto = document.getElementById('puntajeTexto');
+    const mensajeTexto = document.getElementById('mensajeTexto');
+
+    const porcentaje = Math.round((correctas / total) * 100);
+    puntajeTexto.textContent = `${correctas} / ${total} correctas (${porcentaje}%)`;
+
+    resultado.classList.add('mostrar');
+    if (porcentaje >= 60) {
+        resultado.classList.add('aprobado');
+        mensajeTexto.textContent = '¡Muy bien! Revisá las justificaciones para reforzar lo que falte.';
+    } else {
+        resultado.classList.add('reprobado');
+        mensajeTexto.textContent = 'Te conviene repasar la clase antes de seguir. Revisá cada justificación.';
+    }
+
+    resultado.scrollIntoView({behavior: 'smooth'});
+    this.disabled = true;
+    this.textContent = 'Cuestionario corregido ✓';
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: correctas,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora
+    });
+});
+</script>
+</body>
+</html>

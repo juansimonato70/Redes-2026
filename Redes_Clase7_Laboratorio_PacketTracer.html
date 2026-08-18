@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio - Clase 7: ICMP y Diagnóstico</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 880px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    h2 {
+        color: #764ba2;
+        font-size: 1.3em;
+        margin: 25px 0 12px 0;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 6px;
+    }
+
+    p, li { color: #333; font-size: 0.92em; line-height: 1.55; margin-bottom: 6px; }
+    ul, ol { margin-left: 22px; margin-bottom: 10px; }
+    strong { color: #667eea; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 16px 20px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+    }
+
+    .badge-pt {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        font-size: 0.75em;
+        padding: 3px 10px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        font-weight: bold;
+    }
+
+    .caja-concepto {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        padding: 10px 14px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    .caja-concepto h4 { color: #667eea; margin-bottom: 5px; font-size: 1em; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+        font-size: 0.85em;
+    }
+    th, td { border: 1px solid #667eea; padding: 8px; text-align: left; }
+    th { background: #667eea; color: white; }
+    tr:nth-child(even) { background: #f8f9ff; }
+
+    .paso {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 14px;
+        align-items: flex-start;
+    }
+
+    .paso-num {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        background: #667eea;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9em;
+    }
+
+    .paso-contenido { flex: 1; }
+    .paso-titulo { font-weight: bold; color: #333; margin-bottom: 3px; font-size: 0.95em; }
+
+    .checklist { list-style: none; margin-left: 0; }
+    .checklist li {
+        padding: 10px 12px;
+        background: #f8f9ff;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        margin-bottom: 6px;
+        font-size: 0.9em;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .checklist li:hover { background: #eef1ff; }
+    .checklist li input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-top: 1px;
+        accent-color: #667eea;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .checklist li.tildado { background: #e8f9ee; border-color: #34c26a; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin: 20px 0;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .progreso-box {
+        text-align: center;
+        font-size: 0.85em;
+        color: #667eea;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .btn-enviar {
+        display: block;
+        margin: 15px auto 10px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-enviar:hover { background: #5568d3; }
+    .btn-enviar:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+
+    .pregunta-reflexion {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 6px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+    }
+    .pregunta-reflexion .texto-pregunta {
+        font-weight: bold;
+        color: #333;
+        font-size: 0.92em;
+        margin-bottom: 8px;
+    }
+    .pregunta-reflexion textarea {
+        width: 100%;
+        min-height: 70px;
+        padding: 10px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 0.9em;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+    .pregunta-reflexion textarea:focus { outline: 2px solid #667eea; }
+    .pregunta-reflexion textarea.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .pie { text-align: center; margin-top: 25px; font-size: 0.85em; color: #888; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <h1>🧪 Laboratorio</h1>
+    <p class="subtitulo">Clase 7 — ICMP y Herramientas de Diagnóstico</p>
+    <span class="badge-pt">💻 Cisco Packet Tracer</span>
+
+    <div class="intro-box">
+        <strong>Objetivo:</strong> Usar ping y traceroute para diagnosticar una red con varios saltos, observar los mensajes ICMP en modo Simulation, y provocar intencionalmente una falla para practicar un flujo de troubleshooting completo.
+    </div>
+
+    <h2>1. Materiales necesarios</h2>
+    <ul>
+        <li>Cisco Packet Tracer (versión 8.x o superior)</li>
+        <li>2 PC de escritorio (PC-PT)</li>
+        <li>3 Routers (1841 o ISR genérico)</li>
+        <li>Cables rectos (Copper Straight-Through) y seriales o rectos entre routers según el modelo</li>
+    </ul>
+
+    <h2>2. Topología a construir</h2>
+    <p>Armá una cadena de 3 redes conectadas en serie, para tener varios saltos reales que atravesar:</p>
+    <ul>
+        <li><strong>PC0</strong> — <strong>Router0</strong> (red 192.168.1.0/24)</li>
+        <li><strong>Router0</strong> — <strong>Router1</strong> (red 10.0.0.0/30)</li>
+        <li><strong>Router1</strong> — <strong>Router2</strong> (red 10.0.0.4/30)</li>
+        <li><strong>Router2</strong> — <strong>PC1</strong> (red 192.168.2.0/24)</li>
+    </ul>
+
+    <h2>3. Guía paso a paso</h2>
+
+    <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Armar la topología y direccionar cada tramo</div>
+            <p>Conectá los 3 routers en cadena y asigná IP a cada interfaz según el esquema del punto 2. Configurá PC0 y PC1 con su IP, máscara y gateway correspondiente.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Configurar enrutamiento entre los 3 routers</div>
+            <p>Para simplificar, usá rutas estáticas en cada router apuntando a las redes que no conoce directamente. Ejemplo en Router0:</p>
+            <p><code>ip route 192.168.2.0 255.255.255.0 10.0.0.2</code></p>
+            <p>Repetí el concepto en Router1 y Router2 para que ambos extremos (PC0 y PC1) puedan alcanzarse mutuamente.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Verificar conectividad extremo a extremo con ping</div>
+            <p>Desde PC0, ejecutá <code>ping 192.168.2.[IP de PC1]</code>. Deberías recibir 4 respuestas exitosas (Echo Reply), confirmando que el paquete atravesó los 3 routers correctamente.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Rastrear la ruta con tracert</div>
+            <p>Desde PC0, ejecutá <code>tracert 192.168.2.[IP de PC1]</code>. Deberías ver cada salto (Router0, Router1, Router2) listado con su tiempo de respuesta, en el mismo orden en que están conectados físicamente.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">5</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Observar los mensajes ICMP en modo Simulation</div>
+            <p>Cambiá a modo <strong>Simulation</strong> y repetí el ping. Hacé clic en los paquetes para ver el tipo de mensaje ICMP (Echo Request en la ida, Echo Reply en la vuelta) en cada tramo.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">6</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Provocar una falla intencional</div>
+            <p>Apagá (shutdown) la interfaz de Router1 que conecta hacia Router2: <code>interface [nombre] → shutdown</code>. Volvé a hacer ping desde PC0 hacia PC1: debería fallar.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">7</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Diagnosticar la falla con traceroute</div>
+            <p>Ejecutá <code>tracert 192.168.2.[IP de PC1]</code> de nuevo desde PC0. El rastreo debería llegar hasta Router1 y detenerse ahí (mostrando "* * *" o timeout en los saltos siguientes), indicando exactamente dónde está el problema.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">8</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Restaurar y confirmar la solución</div>
+            <p>Volvé a activar la interfaz (<code>no shutdown</code>) y confirmá con ping y tracert que la conectividad se restableció por completo.</p>
+        </div>
+    </div>
+
+    <h2>4. Checklist de verificación final</h2>
+    <div class="progreso-box" id="progresoTexto">0 / 6 pasos completados</div>
+    <ul class="checklist" id="checklistLab">
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Los 3 routers están conectados en cadena con IP en cada interfaz</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Las rutas estáticas permiten que PC0 y PC1 se alcancen mutuamente</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> El ping extremo a extremo funciona correctamente</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Tracert muestra los 3 saltos en el orden correcto</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se provocó la falla y tracert identificó correctamente dónde ocurría</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se restauró la conexión y se confirmó con ping y tracert</label></li>
+    </ul>
+
+    <h2>5. Preguntas de reflexión</h2>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">1. Cuando la interfaz de Router1 estaba apagada, ¿qué mostró exactamente el tracert en el salto donde se cortaba la ruta?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">2. ¿Por qué tracert es más útil que ping para encontrar EN QUÉ PUNTO de la red ocurre un problema?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">3. Si un firewall real bloqueara ICMP en Router2, ¿qué verías en el tracert y por qué podría ser engañoso?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn-enviar" id="btnEnviarLab">Enviar confirmación de laboratorio</button>
+    <div class="estado-envio" id="estadoEnvio"></div>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Clase 7 · Laboratorio Packet Tracer</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — PEGAR ACÁ LA URL DE TU GOOGLE APPS SCRIPT
+//
+// 1. Abrí tu planilla de Google Sheets para "Clase 7 - Laboratorio"
+// 2. Extensiones → Apps Script → pegá el script → Implementar →
+//    Nueva implementación → Aplicación web → Copiá la URL (.../exec)
+// 3. Reemplazá el texto de abajo, entre comillas, por esa URL
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHZbMnK7E7b9zp53cRb739DEKm99g5UoLF9-EX9TAE18pgRR86MPkUbGxTx-szb8C3dg/exec";
+const NOMBRE_CLASE = "Clase 7 - Laboratorio";
+// ═══════════════════════════════════════════════════════════════
+
+const checks = document.querySelectorAll('.check-item');
+const progresoTexto = document.getElementById('progresoTexto');
+
+function actualizarProgreso() {
+    let completados = 0;
+    checks.forEach(c => {
+        const li = c.closest('li');
+        if (c.checked) {
+            completados++;
+            li.classList.add('tildado');
+        } else {
+            li.classList.remove('tildado');
+        }
+    });
+    progresoTexto.textContent = `${completados} / ${checks.length} pasos completados`;
+    return completados;
+}
+
+checks.forEach(c => c.addEventListener('change', actualizarProgreso));
+actualizarProgreso();
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando confirmación...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Confirmación enviada a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnEnviarLab').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    // Validar preguntas de reflexión
+    const textareas = document.querySelectorAll('.respuesta-reflexion');
+    let faltante = null;
+    textareas.forEach(t => {
+        if (!t.value.trim()) {
+            t.classList.add('campo-error');
+            if (!faltante) faltante = t;
+        } else {
+            t.classList.remove('campo-error');
+        }
+    });
+    if (faltante) {
+        faltante.focus();
+        faltante.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+
+    const completados = actualizarProgreso();
+    const total = checks.length;
+    const porcentaje = Math.round((completados / total) * 100);
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    const respuestas = Array.from(textareas).map((t, i) => {
+        const pregunta = t.closest('.pregunta-reflexion').querySelector('.texto-pregunta').textContent.trim();
+        return `${pregunta} => ${t.value.trim()}`;
+    }).join(' | ');
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: completados,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora,
+        respuestas: respuestas
+    });
+
+    this.disabled = true;
+    this.textContent = 'Confirmación enviada ✓';
+});
+</script>
+</body>
+</html>

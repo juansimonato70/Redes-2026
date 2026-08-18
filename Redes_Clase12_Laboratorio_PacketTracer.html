@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio - Clase 12: Solución de Problemas</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 880px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    h2 {
+        color: #764ba2;
+        font-size: 1.3em;
+        margin: 25px 0 12px 0;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 6px;
+    }
+
+    p, li { color: #333; font-size: 0.92em; line-height: 1.55; margin-bottom: 6px; }
+    ul, ol { margin-left: 22px; margin-bottom: 10px; }
+    strong { color: #667eea; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 16px 20px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+    }
+
+    .badge-pt {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        font-size: 0.75em;
+        padding: 3px 10px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        font-weight: bold;
+    }
+
+    .caja-concepto {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        padding: 10px 14px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    .caja-concepto h4 { color: #667eea; margin-bottom: 5px; font-size: 1em; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+        font-size: 0.85em;
+    }
+    th, td { border: 1px solid #667eea; padding: 8px; text-align: left; }
+    th { background: #667eea; color: white; }
+    tr:nth-child(even) { background: #f8f9ff; }
+
+    .paso {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 14px;
+        align-items: flex-start;
+    }
+
+    .paso-num {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        background: #667eea;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9em;
+    }
+
+    .paso-contenido { flex: 1; }
+    .paso-titulo { font-weight: bold; color: #333; margin-bottom: 3px; font-size: 0.95em; }
+
+    .checklist { list-style: none; margin-left: 0; }
+    .checklist li {
+        padding: 10px 12px;
+        background: #f8f9ff;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        margin-bottom: 6px;
+        font-size: 0.9em;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .checklist li:hover { background: #eef1ff; }
+    .checklist li input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-top: 1px;
+        accent-color: #667eea;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .checklist li.tildado { background: #e8f9ee; border-color: #34c26a; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin: 20px 0;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .progreso-box {
+        text-align: center;
+        font-size: 0.85em;
+        color: #667eea;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .btn-enviar {
+        display: block;
+        margin: 15px auto 10px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-enviar:hover { background: #5568d3; }
+    .btn-enviar:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+
+    .pregunta-reflexion {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 6px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+    }
+    .pregunta-reflexion .texto-pregunta {
+        font-weight: bold;
+        color: #333;
+        font-size: 0.92em;
+        margin-bottom: 8px;
+    }
+    .pregunta-reflexion textarea {
+        width: 100%;
+        min-height: 70px;
+        padding: 10px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 0.9em;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+    .pregunta-reflexion textarea:focus { outline: 2px solid #667eea; }
+    .pregunta-reflexion textarea.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .pie { text-align: center; margin-top: 25px; font-size: 0.85em; color: #888; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <h1>🧪 Laboratorio</h1>
+    <p class="subtitulo">Clase 12 — Solución de Problemas y Soporte de Red</p>
+    <span class="badge-pt">💻 Cisco Packet Tracer</span>
+
+    <div class="intro-box">
+        <strong>Objetivo:</strong> Recibir una red con una falla "escondida" a propósito, aplicar la metodología Bottom-Up para diagnosticarla paso a paso, documentar el proceso como lo haría un técnico real, y resolver el problema.
+    </div>
+
+    <h2>1. Materiales necesarios</h2>
+    <ul>
+        <li>Cisco Packet Tracer (versión 8.x o superior)</li>
+        <li>3 PC de escritorio (PC-PT)</li>
+        <li>2 Switches (2960)</li>
+        <li>1 Router (1841 o ISR genérico)</li>
+        <li>Cables rectos (Copper Straight-Through)</li>
+    </ul>
+
+    <h2>2. Preparar el escenario con una falla intencional</h2>
+    <p>Armá esta topología:</p>
+    <ul>
+        <li><strong>PC0 y PC1</strong> conectados al <strong>Switch0</strong>, <strong>PC2</strong> conectado al <strong>Switch1</strong></li>
+        <li><strong>Switch0</strong> y <strong>Switch1</strong> ambos conectados al <strong>Router0</strong> (Fa0/0 y Fa0/1)</li>
+        <li>Direccioná todo correctamente: Switch0/PC0/PC1 en 192.168.1.0/24, Switch1/PC2 en 192.168.2.0/24</li>
+    </ul>
+    <p>Una vez que todo funcione (verificalo con ping), introducí <strong>una sola falla a propósito</strong>, sin anotar cuál fue (para que sea un desafío real). Elegí una opción:</p>
+    <ul>
+        <li>Cambiar la máscara de subred de un PC por una incorrecta, o</li>
+        <li>Poner una IP de gateway incorrecta en un PC, o</li>
+        <li>Apagar (shutdown) una interfaz del router</li>
+    </ul>
+
+    <h2>3. Guía paso a paso (metodología Bottom-Up)</h2>
+
+    <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Definir el problema</div>
+            <p>Anotá exactamente qué falla observás: por ejemplo "PC1 no puede hacer ping a PC2, pero sí a PC0". Sé específico, como lo haría un ticket real de soporte.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Verificar la capa física</div>
+            <p>Revisá que todos los cables estén conectados y los indicadores de enlace en verde en los dispositivos involucrados.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Verificar la configuración IP de los dispositivos finales</div>
+            <p>En cada PC → Desktop → IP Configuration, confirmá IP, máscara y gateway. Compará contra lo que debería ser según el diseño original.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Verificar el estado de las interfaces del router</div>
+            <p>En Router0 → CLI, ejecutá <code>show ip interface brief</code>. Confirmá que todas las interfaces relevantes estén "up/up".</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">5</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Aislar la causa con ping progresivo</div>
+            <p>Desde el PC afectado, probá: ping a su propio gateway → ping a la IP del switch → ping al router → ping al destino final. El punto donde deja de responder indica dónde está el problema.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">6</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Corregir la falla</div>
+            <p>Una vez identificada la causa (máscara incorrecta, gateway incorrecto, o interfaz apagada), corregila.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">7</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Confirmar la resolución</div>
+            <p>Repetí el ping original (PC1 a PC2) y confirmá que ahora funciona correctamente.</p>
+        </div>
+    </div>
+
+    <div class="paso">
+        <div class="paso-num">8</div>
+        <div class="paso-contenido">
+            <div class="paso-titulo">Documentar el caso</div>
+            <p>Escribí un resumen breve tipo ticket cerrado: síntoma inicial, pasos de diagnóstico realizados, causa raíz encontrada, y solución aplicada. Esto es exactamente lo que se guardaría en un sistema de ticketing real.</p>
+        </div>
+    </div>
+
+    <h2>4. Checklist de verificación final</h2>
+    <div class="progreso-box" id="progresoTexto">0 / 6 pasos completados</div>
+    <ul class="checklist" id="checklistLab">
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> La red funcionaba correctamente antes de introducir la falla</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se introdujo una falla intencional sin anotar cuál fue</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se siguió el orden Bottom-Up (física → configuración IP → interfaces → ping progresivo)</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se identificó correctamente la causa raíz de la falla</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se corrigió la falla y se confirmó la conectividad restaurada</label></li>
+        <li><label style="display:flex; align-items:flex-start; gap:10px; width:100%; cursor:pointer;"><input type="checkbox" class="check-item"> Se documentó el caso completo (síntoma, diagnóstico, causa, solución)</label></li>
+    </ul>
+
+    <h2>5. Preguntas de reflexión</h2>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">1. ¿Qué falla introdujiste, y en qué paso del proceso Bottom-Up la detectaste?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">2. Si hubieras usado un enfoque Top-Down en vez de Bottom-Up para este mismo problema, ¿hubiese sido más rápido o más lento? ¿Por qué?</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+    <div class="pregunta-reflexion">
+        <div class="texto-pregunta">3. Escribí acá tu "ticket cerrado" del paso 8 (síntoma, diagnóstico, causa raíz, solución).</div>
+        <textarea class="respuesta-reflexion" placeholder="Escribí tu respuesta acá..."></textarea>
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn-enviar" id="btnEnviarLab">Enviar confirmación de laboratorio</button>
+    <div class="estado-envio" id="estadoEnvio"></div>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Clase 12 · Laboratorio Packet Tracer</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — PEGAR ACÁ LA URL DE TU GOOGLE APPS SCRIPT
+//
+// 1. Abrí tu planilla de Google Sheets para "Clase 12 - Laboratorio"
+// 2. Extensiones → Apps Script → pegá el script → Implementar →
+//    Nueva implementación → Aplicación web → Copiá la URL (.../exec)
+// 3. Reemplazá el texto de abajo, entre comillas, por esa URL
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHZbMnK7E7b9zp53cRb739DEKm99g5UoLF9-EX9TAE18pgRR86MPkUbGxTx-szb8C3dg/exec";
+const NOMBRE_CLASE = "Clase 12 - Laboratorio";
+// ═══════════════════════════════════════════════════════════════
+
+const checks = document.querySelectorAll('.check-item');
+const progresoTexto = document.getElementById('progresoTexto');
+
+function actualizarProgreso() {
+    let completados = 0;
+    checks.forEach(c => {
+        const li = c.closest('li');
+        if (c.checked) {
+            completados++;
+            li.classList.add('tildado');
+        } else {
+            li.classList.remove('tildado');
+        }
+    });
+    progresoTexto.textContent = `${completados} / ${checks.length} pasos completados`;
+    return completados;
+}
+
+checks.forEach(c => c.addEventListener('change', actualizarProgreso));
+actualizarProgreso();
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando confirmación...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Confirmación enviada a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnEnviarLab').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    // Validar preguntas de reflexión
+    const textareas = document.querySelectorAll('.respuesta-reflexion');
+    let faltante = null;
+    textareas.forEach(t => {
+        if (!t.value.trim()) {
+            t.classList.add('campo-error');
+            if (!faltante) faltante = t;
+        } else {
+            t.classList.remove('campo-error');
+        }
+    });
+    if (faltante) {
+        faltante.focus();
+        faltante.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+
+    const completados = actualizarProgreso();
+    const total = checks.length;
+    const porcentaje = Math.round((completados / total) * 100);
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    const respuestas = Array.from(textareas).map((t, i) => {
+        const pregunta = t.closest('.pregunta-reflexion').querySelector('.texto-pregunta').textContent.trim();
+        return `${pregunta} => ${t.value.trim()}`;
+    }).join(' | ');
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: completados,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora,
+        respuestas: respuestas
+    });
+
+    this.disabled = true;
+    this.textContent = 'Confirmación enviada ✓';
+});
+</script>
+</body>
+</html>

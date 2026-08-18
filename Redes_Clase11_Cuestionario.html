@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario - Clase 11: Dispositivos Cisco</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 850px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        font-size: 0.9em;
+        color: #333;
+    }
+
+    .pregunta {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 8px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+        transition: border-color 0.2s;
+    }
+
+    .pregunta-num { color: #667eea; font-weight: bold; font-size: 0.85em; margin-bottom: 4px; }
+    .pregunta-texto { color: #222; font-size: 1em; font-weight: 600; margin-bottom: 10px; }
+
+    .opciones { list-style: none; }
+
+    .opcion {
+        display: block;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        background: white;
+        border: 1px solid #d8ddf5;
+        color: #333;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .opcion:hover { background: #eef1ff; }
+    .opcion input { margin-right: 8px; }
+
+    /* Estado tras corregir */
+    .pregunta.corregida .opcion { cursor: default; }
+    .pregunta.corregida .opcion:hover { background: white; }
+    .pregunta.corregida .opcion.marcar-correcta {
+        background: #e8f9ee; border-color: #34c26a; color: #1e7a41; font-weight: bold;
+    }
+    .pregunta.corregida .opcion.marcar-incorrecta {
+        background: #fdecec; border-color: #e35a5a; color: #a33131;
+    }
+
+    .justificacion {
+        display: none;
+        margin-top: 8px;
+        font-size: 0.82em;
+        color: #555;
+        font-style: italic;
+        border-top: 1px dashed #d8ddf5;
+        padding-top: 6px;
+    }
+    .pregunta.corregida .justificacion { display: block; }
+
+    .icono-resultado { font-weight: bold; margin-right: 4px; }
+
+    .btn-corregir {
+        display: block;
+        margin: 10px auto 25px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-corregir:hover { background: #5568d3; }
+    .btn-corregir:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .resultado-final {
+        display: none;
+        text-align: center;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 0 0 25px 0;
+        border: 2px solid #667eea;
+    }
+    .resultado-final.mostrar { display: block; }
+    .resultado-final .puntaje { font-size: 2.2em; font-weight: bold; color: #667eea; }
+    .resultado-final .mensaje { font-size: 1em; color: #555; margin-top: 6px; }
+    .resultado-final.aprobado { background: #e8f9ee; border-color: #34c26a; }
+    .resultado-final.aprobado .puntaje { color: #1e7a41; }
+    .resultado-final.reprobado { background: #fff6e8; border-color: #f0a63c; }
+    .resultado-final.reprobado .puntaje { color: #b3711a; }
+
+    .pie { text-align: center; margin-top: 10px; font-size: 0.85em; color: #888; }
+
+    .aviso-incompleto {
+        display: none;
+        text-align: center;
+        color: #a33131;
+        background: #fdecec;
+        border: 1px solid #e35a5a;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+    }
+    .aviso-incompleto.mostrar { display: block; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <h1>📋 Cuestionario</h1>
+    <p class="subtitulo">Clase 11 — Dispositivos Cisco y Solución de Problemas</p>
+
+    <div class="intro-box">
+        Respondé las 12 preguntas y presioná <strong>"Corregir cuestionario"</strong> al final. Vas a ver tu puntaje y la justificación de cada respuesta correcta.
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <div id="resultadoFinal" class="resultado-final">
+        <div class="puntaje" id="puntajeTexto"></div>
+        <div class="mensaje" id="mensajeTexto"></div>
+        <div class="estado-envio" id="estadoEnvio"></div>
+    </div>
+
+    <div id="avisoIncompleto" class="aviso-incompleto">⚠️ Respondé todas las preguntas antes de corregir.</div>
+
+    <form id="quizForm">
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 1</div>
+            <div class="pregunta-texto">¿En qué capa del modelo OSI opera principalmente un switch Cisco tradicional?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q1" value="0"> Capa 1</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="1"> Capa 2</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="2"> Capa 3</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="3"> Capa 4</label></li>
+            </ul>
+            <div class="justificacion">Los switches tradicionales operan en la Capa 2 (Enlace de Datos), reenviando tramas según direcciones MAC.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 2</div>
+            <div class="pregunta-texto">¿Qué diferencia hay entre un switch de capa 2 tradicional y un "multilayer switch"?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q2" value="0"> No hay diferencia real</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="1"> El multilayer switch es más lento</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="2"> El multilayer switch (capa 3) también puede tomar decisiones de enrutamiento basadas en IP</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="3"> El multilayer switch no puede conectar PCs</label></li>
+            </ul>
+            <div class="justificacion">Un switch multicapa (capa 3) combina funciones de switching tradicional con capacidades de enrutamiento basadas en direcciones IP.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 3</div>
+            <div class="pregunta-texto">¿Qué rol cumple un router Cisco en una red?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q3" value="0"> Conecta diferentes redes y toma decisiones de enrutamiento basadas en IP</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="1"> Solo repite señales eléctricas sin analizar los datos</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="2"> Traduce nombres de dominio a IPs</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="3"> Asigna direcciones MAC a los dispositivos</label></li>
+            </ul>
+            <div class="justificacion">El router opera en Capa 3, conectando redes distintas y decidiendo el mejor camino según direcciones IP.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 4</div>
+            <div class="pregunta-texto">¿Qué valor de "config-register" se usa para que un router IGNORE su startup-config al arrancar (usado en recuperación de contraseña)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q4" value="0"> 0x2102</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="1"> 0x2142</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="2"> 0x2101</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="3"> 0x0000</label></li>
+            </ul>
+            <div class="justificacion">0x2142 hace que el router arranque ignorando el startup-config, lo cual permite entrar sin contraseña para recuperar el acceso.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 5</div>
+            <div class="pregunta-texto">¿Cuál es el valor de config-register de "operación normal" (predeterminado)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q5" value="0"> 0x2142</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="1"> 0x2101</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="2"> 0xFFFF</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="3"> 0x2102</label></li>
+            </ul>
+            <div class="justificacion">0x2102 es el valor predeterminado: el router arranca normalmente desde Flash y carga el startup-config.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 6</div>
+            <div class="pregunta-texto">¿Cuál es el primer paso recomendado en un proceso metódico de solución de problemas de red?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q6" value="0"> Reiniciar todos los dispositivos sin diagnóstico previo</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="1"> Cambiar el cableado inmediatamente</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="2"> Identificar y definir claramente el problema (qué falla, desde cuándo, qué cambió)</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="3"> Llamar directamente al proveedor de Internet</label></li>
+            </ul>
+            <div class="justificacion">Todo proceso de troubleshooting efectivo comienza con identificar y definir claramente el problema antes de intentar soluciones.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 7</div>
+            <div class="pregunta-texto">¿Cuál de los siguientes es un ejemplo típico de problema de capa física?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q7" value="0"> Un servidor DNS mal configurado</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="1"> Un cable de red dañado o desconectado</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="2"> Una contraseña de WiFi incorrecta</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="3"> Un firewall bloqueando un puerto</label></li>
+            </ul>
+            <div class="justificacion">Un cable dañado o desconectado es un problema de capa física — el nivel más bajo, relacionado con la transmisión de señales.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 8</div>
+            <div class="pregunta-texto">Un usuario reporta que su WiFi se conecta pero no navega. ¿Qué se debería verificar primero según un enfoque metódico?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q8" value="0"> Si tiene IP, gateway y DNS asignados correctamente</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="1"> Reinstalar el sistema operativo directamente</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="2"> Cambiar la placa de red inmediatamente</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="3"> Ignorar el problema, seguramente se resuelve solo</label></li>
+            </ul>
+            <div class="justificacion">Antes de acciones drásticas, se verifica la configuración básica de red (IP, gateway, DNS) para descartar problemas simples de configuración.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 9</div>
+            <div class="pregunta-texto">¿Por qué es importante la documentación al brindar asistencia al cliente en soporte de red?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q9" value="0"> No es importante, solo genera trabajo extra</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="1"> Solo sirve para cumplir requisitos legales</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="2"> Sirve únicamente para facturar al cliente</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="3"> Permite dar seguimiento al problema, detectar patrones recurrentes y acelerar futuros diagnósticos</label></li>
+            </ul>
+            <div class="justificacion">Documentar cada caso permite hacer seguimiento, identificar problemas recurrentes y resolver casos futuros similares más rápido.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 10</div>
+            <div class="pregunta-texto">¿Qué comando se usa en un switch/router Cisco para ver información general de hardware, versión de IOS y el config-register?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q10" value="0"> show ip route</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="1"> show version</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="2"> show mac address-table</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="3"> ping</label></li>
+            </ul>
+            <div class="justificacion">show version muestra la versión de IOS, hardware, tiempo de actividad y el valor del config-register, entre otra información.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 11</div>
+            <div class="pregunta-texto">Durante la recuperación de contraseña de un router, ¿en qué modo entra el equipo al presionar Break durante el arranque?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q11" value="0"> Modo usuario</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="1"> Modo privilegiado</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="2"> Modo ROMMON (ROM Monitor)</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="3"> Modo de configuración global</label></li>
+            </ul>
+            <div class="justificacion">Al enviar la señal de Break durante los primeros segundos del arranque, el router entra en modo ROMMON, un modo de bajo nivel usado para recuperación.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 12</div>
+            <div class="pregunta-texto">Después de recuperar la contraseña de un router, ¿por qué es necesario volver a poner el config-register en 0x2102 antes de reiniciar?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q12" value="0"> Para que el router vuelva a arrancar normalmente cargando su configuración guardada</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="1"> No es necesario, es un paso opcional</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="2"> Para borrar completamente la configuración</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="3"> Para activar el modo ROMMON permanentemente</label></li>
+            </ul>
+            <div class="justificacion">Si no se restaura el config-register a 0x2102, el router seguirá arrancando en modo de recuperación (ignorando el startup-config) en cada reinicio futuro.</div>
+        </div>
+
+        <button type="button" class="btn-corregir" id="btnCorregir">Corregir cuestionario</button>
+    </form>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Clase 11</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — PEGAR ACÁ LA URL DE TU GOOGLE APPS SCRIPT
+//
+// 1. Abrí tu planilla de Google Sheets para "Clase 1 - Cuestionario"
+// 2. Extensiones → Apps Script → pegá el script → Implementar →
+//    Nueva implementación → Aplicación web → Copiá la URL (.../exec)
+// 3. Reemplazá el texto de abajo, entre comillas, por esa URL
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVDS5dMEVVzg363GJJk9dBBqjS5MeN0iaDuMiL6_eNI7R1xxq2U21c_SZ8mwnE9Na5aA/exec";
+const NOMBRE_CLASE = "Clase 11 - Cuestionario";
+// ═══════════════════════════════════════════════════════════════
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando resultado...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Resultado enviado a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar el resultado. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnCorregir').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    const preguntas = document.querySelectorAll('.pregunta');
+    let respondidas = 0;
+    preguntas.forEach(p => {
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        if (document.querySelector(`input[name=${nombreQ}]:checked`)) respondidas++;
+    });
+
+    const aviso = document.getElementById('avisoIncompleto');
+    if (respondidas < preguntas.length) {
+        aviso.classList.add('mostrar');
+        return;
+    }
+    aviso.classList.remove('mostrar');
+
+    let correctas = 0;
+    preguntas.forEach(p => {
+        const correctaIdx = p.getAttribute('data-correcta');
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        const seleccionado = document.querySelector(`input[name=${nombreQ}]:checked`);
+        const opciones = p.querySelectorAll('.opcion');
+
+        opciones.forEach((op, idx) => {
+            const input = op.querySelector('input');
+            input.disabled = true;
+            if (idx == correctaIdx) {
+                op.classList.add('marcar-correcta');
+            } else if (seleccionado && idx == seleccionado.value) {
+                op.classList.add('marcar-incorrecta');
+            }
+        });
+
+        p.classList.add('corregida');
+        if (seleccionado && seleccionado.value == correctaIdx) correctas++;
+    });
+
+    const total = preguntas.length;
+    const resultado = document.getElementById('resultadoFinal');
+    const puntajeTexto = document.getElementById('puntajeTexto');
+    const mensajeTexto = document.getElementById('mensajeTexto');
+
+    const porcentaje = Math.round((correctas / total) * 100);
+    puntajeTexto.textContent = `${correctas} / ${total} correctas (${porcentaje}%)`;
+
+    resultado.classList.add('mostrar');
+    if (porcentaje >= 60) {
+        resultado.classList.add('aprobado');
+        mensajeTexto.textContent = '¡Muy bien! Revisá las justificaciones para reforzar lo que falte.';
+    } else {
+        resultado.classList.add('reprobado');
+        mensajeTexto.textContent = 'Te conviene repasar la clase antes de seguir. Revisá cada justificación.';
+    }
+
+    resultado.scrollIntoView({behavior: 'smooth'});
+    this.disabled = true;
+    this.textContent = 'Cuestionario corregido ✓';
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: correctas,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora
+    });
+});
+</script>
+</body>
+</html>

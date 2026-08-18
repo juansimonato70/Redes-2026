@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario - Clase 9: Ethernet y Paquetes IP</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 850px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        font-size: 0.9em;
+        color: #333;
+    }
+
+    .pregunta {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 8px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+        transition: border-color 0.2s;
+    }
+
+    .pregunta-num { color: #667eea; font-weight: bold; font-size: 0.85em; margin-bottom: 4px; }
+    .pregunta-texto { color: #222; font-size: 1em; font-weight: 600; margin-bottom: 10px; }
+
+    .opciones { list-style: none; }
+
+    .opcion {
+        display: block;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        background: white;
+        border: 1px solid #d8ddf5;
+        color: #333;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .opcion:hover { background: #eef1ff; }
+    .opcion input { margin-right: 8px; }
+
+    /* Estado tras corregir */
+    .pregunta.corregida .opcion { cursor: default; }
+    .pregunta.corregida .opcion:hover { background: white; }
+    .pregunta.corregida .opcion.marcar-correcta {
+        background: #e8f9ee; border-color: #34c26a; color: #1e7a41; font-weight: bold;
+    }
+    .pregunta.corregida .opcion.marcar-incorrecta {
+        background: #fdecec; border-color: #e35a5a; color: #a33131;
+    }
+
+    .justificacion {
+        display: none;
+        margin-top: 8px;
+        font-size: 0.82em;
+        color: #555;
+        font-style: italic;
+        border-top: 1px dashed #d8ddf5;
+        padding-top: 6px;
+    }
+    .pregunta.corregida .justificacion { display: block; }
+
+    .icono-resultado { font-weight: bold; margin-right: 4px; }
+
+    .btn-corregir {
+        display: block;
+        margin: 10px auto 25px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-corregir:hover { background: #5568d3; }
+    .btn-corregir:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .resultado-final {
+        display: none;
+        text-align: center;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 0 0 25px 0;
+        border: 2px solid #667eea;
+    }
+    .resultado-final.mostrar { display: block; }
+    .resultado-final .puntaje { font-size: 2.2em; font-weight: bold; color: #667eea; }
+    .resultado-final .mensaje { font-size: 1em; color: #555; margin-top: 6px; }
+    .resultado-final.aprobado { background: #e8f9ee; border-color: #34c26a; }
+    .resultado-final.aprobado .puntaje { color: #1e7a41; }
+    .resultado-final.reprobado { background: #fff6e8; border-color: #f0a63c; }
+    .resultado-final.reprobado .puntaje { color: #b3711a; }
+
+    .pie { text-align: center; margin-top: 10px; font-size: 0.85em; color: #888; }
+
+    .aviso-incompleto {
+        display: none;
+        text-align: center;
+        color: #a33131;
+        background: #fdecec;
+        border: 1px solid #e35a5a;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+    }
+    .aviso-incompleto.mostrar { display: block; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <h1>📋 Cuestionario</h1>
+    <p class="subtitulo">Clase 9 — Conmutación Ethernet y Paquetes IP</p>
+
+    <div class="intro-box">
+        Respondé las 12 preguntas y presioná <strong>"Corregir cuestionario"</strong> al final. Vas a ver tu puntaje y la justificación de cada respuesta correcta.
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <div id="resultadoFinal" class="resultado-final">
+        <div class="puntaje" id="puntajeTexto"></div>
+        <div class="mensaje" id="mensajeTexto"></div>
+        <div class="estado-envio" id="estadoEnvio"></div>
+    </div>
+
+    <div id="avisoIncompleto" class="aviso-incompleto">⚠️ Respondé todas las preguntas antes de corregir.</div>
+
+    <form id="quizForm">
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 1</div>
+            <div class="pregunta-texto">¿Qué estándar IEEE define Ethernet?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q1" value="0"> 802.11</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="1"> 802.3</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="2"> 802.1Q</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="3"> 802.15</label></li>
+            </ul>
+            <div class="justificacion">Ethernet está definido por el estándar IEEE 802.3.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 2</div>
+            <div class="pregunta-texto">¿Qué es la tabla de direcciones MAC de un switch?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q2" value="0"> Una lista de direcciones IP permitidas</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="1"> Una lista de contraseñas de administración</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="2"> Un mapeo entre direcciones MAC y los puertos físicos del switch</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="3"> Una tabla de rutas hacia otras redes</label></li>
+            </ul>
+            <div class="justificacion">La tabla MAC mapea qué dirección MAC está conectada a cada puerto físico, permitiendo al switch reenviar tramas de forma eficiente.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 3</div>
+            <div class="pregunta-texto">¿Cómo aprende un switch las direcciones MAC de los dispositivos conectados?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q3" value="0"> De forma dinámica, observando la dirección MAC de origen de las tramas que recibe</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="1"> Un administrador debe cargarlas manualmente siempre</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="2"> Las descarga de un servidor DNS</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="3"> No aprende nada, siempre hace broadcast</label></li>
+            </ul>
+            <div class="justificacion">El switch aprende dinámicamente asociando la MAC de origen de cada trama entrante con el puerto por el que llegó.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 4</div>
+            <div class="pregunta-texto">Al enrutar un paquete entre dos redes distintas, ¿qué se mantiene igual y qué cambia en cada salto?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q4" value="0"> Cambia la IP, se mantiene la MAC</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="1"> Cambian ambas en cada salto</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="2"> No cambia nada</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="3"> La IP de origen/destino se mantiene igual; la MAC cambia en cada salto</label></li>
+            </ul>
+            <div class="justificacion">La capa 3 (IP) permanece constante durante todo el recorrido; la capa 2 (MAC) cambia en cada salto porque solo es válida entre dispositivos directamente conectados.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 5</div>
+            <div class="pregunta-texto">¿Cuál es la responsabilidad principal de la capa de red (Capa 3)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q5" value="0"> Convertir bits en señales eléctricas</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="1"> Enrutamiento y direccionamiento lógico entre redes distintas</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="2"> Cifrar el contenido de las aplicaciones</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="3"> Resolver nombres de dominio</label></li>
+            </ul>
+            <div class="justificacion">La capa de red se encarga del direccionamiento lógico (IP) y de determinar el mejor camino para enrutar paquetes entre redes.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 6</div>
+            <div class="pregunta-texto">¿Cuántos bits tiene el campo de dirección de origen en un paquete IPv6?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q6" value="0"> 32 bits</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="1"> 48 bits</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="2"> 128 bits</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="3"> 64 bits</label></li>
+            </ul>
+            <div class="justificacion">Tanto la dirección de origen como la de destino en un paquete IPv6 ocupan 128 bits cada una.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 7</div>
+            <div class="pregunta-texto">¿Cuál es el equivalente en IPv6 del campo TTL de IPv4?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q7" value="0"> Hop Limit</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="1"> Flow Label</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="2"> Traffic Class</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="3"> Next Header</label></li>
+            </ul>
+            <div class="justificacion">El campo Hop Limit de IPv6 cumple la misma función que TTL en IPv4: decrece en cada salto y evita que un paquete circule indefinidamente.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 8</div>
+            <div class="pregunta-texto">¿Cuántas veces puede usarse la compresión "::" en una misma dirección IPv6?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q8" value="0"> Tantas veces como haga falta</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="1"> Solo una vez</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="2"> Exactamente dos veces</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="3"> Nunca puede usarse</label></li>
+            </ul>
+            <div class="justificacion">El "::" solo puede usarse una vez por dirección, para evitar ambigüedad sobre cuántos grupos de ceros representa.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="2">
+            <div class="pregunta-num">Pregunta 9</div>
+            <div class="pregunta-texto">En una dirección IPv4, ¿qué determina la "porción de red" y la "porción de host"?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q9" value="0"> El protocolo de capa de aplicación usado</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="1"> El fabricante de la placa de red</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="2"> La máscara de subred</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="3"> El número de puerto</label></li>
+            </ul>
+            <div class="justificacion">La máscara de subred determina cuántos bits de la dirección IP corresponden a la red y cuántos al host.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="3">
+            <div class="pregunta-num">Pregunta 10</div>
+            <div class="pregunta-texto">¿Qué reemplazó el sistema de "clases" (A, B, C) de direccionamiento IPv4?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q10" value="0"> NAT</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="1"> DHCP</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="2"> ARP</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="3"> CIDR (Classless Inter-Domain Routing)</label></li>
+            </ul>
+            <div class="justificacion">CIDR reemplazó el sistema rígido de clases, permitiendo asignar bloques de direcciones de tamaño flexible según la máscara elegida.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="1">
+            <div class="pregunta-num">Pregunta 11</div>
+            <div class="pregunta-texto">¿Qué mecanismo permite que direcciones IPv4 privadas (RFC 1918) accedan a Internet?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q11" value="0"> DNS</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="1"> NAT</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="2"> ARP</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="3"> ICMP</label></li>
+            </ul>
+            <div class="justificacion">NAT permite que dispositivos con direcciones IP privadas (no enrutables en Internet) accedan a la red pública compartiendo una o pocas IP públicas.</div>
+        </div>
+
+        <div class="pregunta" data-correcta="0">
+            <div class="pregunta-num">Pregunta 12</div>
+            <div class="pregunta-texto">¿Qué operación matemática se usa para calcular la dirección de red a partir de una IP y su máscara?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q12" value="0"> AND (bit a bit) entre la IP y la máscara</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="1"> Suma directa de la IP y la máscara</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="2"> OR (bit a bit)</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="3"> No se necesita ningún cálculo</label></li>
+            </ul>
+            <div class="justificacion">La dirección de red se obtiene aplicando la operación AND bit a bit entre la dirección IP y la máscara de subred.</div>
+        </div>
+
+        <button type="button" class="btn-corregir" id="btnCorregir">Corregir cuestionario</button>
+    </form>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Clase 9</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — PEGAR ACÁ LA URL DE TU GOOGLE APPS SCRIPT
+//
+// 1. Abrí tu planilla de Google Sheets para "Clase 1 - Cuestionario"
+// 2. Extensiones → Apps Script → pegá el script → Implementar →
+//    Nueva implementación → Aplicación web → Copiá la URL (.../exec)
+// 3. Reemplazá el texto de abajo, entre comillas, por esa URL
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVDS5dMEVVzg363GJJk9dBBqjS5MeN0iaDuMiL6_eNI7R1xxq2U21c_SZ8mwnE9Na5aA/exec";
+const NOMBRE_CLASE = "Clase 9 - Cuestionario";
+// ═══════════════════════════════════════════════════════════════
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando resultado...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Resultado enviado a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar el resultado. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnCorregir').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    const preguntas = document.querySelectorAll('.pregunta');
+    let respondidas = 0;
+    preguntas.forEach(p => {
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        if (document.querySelector(`input[name=${nombreQ}]:checked`)) respondidas++;
+    });
+
+    const aviso = document.getElementById('avisoIncompleto');
+    if (respondidas < preguntas.length) {
+        aviso.classList.add('mostrar');
+        return;
+    }
+    aviso.classList.remove('mostrar');
+
+    let correctas = 0;
+    preguntas.forEach(p => {
+        const correctaIdx = p.getAttribute('data-correcta');
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        const seleccionado = document.querySelector(`input[name=${nombreQ}]:checked`);
+        const opciones = p.querySelectorAll('.opcion');
+
+        opciones.forEach((op, idx) => {
+            const input = op.querySelector('input');
+            input.disabled = true;
+            if (idx == correctaIdx) {
+                op.classList.add('marcar-correcta');
+            } else if (seleccionado && idx == seleccionado.value) {
+                op.classList.add('marcar-incorrecta');
+            }
+        });
+
+        p.classList.add('corregida');
+        if (seleccionado && seleccionado.value == correctaIdx) correctas++;
+    });
+
+    const total = preguntas.length;
+    const resultado = document.getElementById('resultadoFinal');
+    const puntajeTexto = document.getElementById('puntajeTexto');
+    const mensajeTexto = document.getElementById('mensajeTexto');
+
+    const porcentaje = Math.round((correctas / total) * 100);
+    puntajeTexto.textContent = `${correctas} / ${total} correctas (${porcentaje}%)`;
+
+    resultado.classList.add('mostrar');
+    if (porcentaje >= 60) {
+        resultado.classList.add('aprobado');
+        mensajeTexto.textContent = '¡Muy bien! Revisá las justificaciones para reforzar lo que falte.';
+    } else {
+        resultado.classList.add('reprobado');
+        mensajeTexto.textContent = 'Te conviene repasar la clase antes de seguir. Revisá cada justificación.';
+    }
+
+    resultado.scrollIntoView({behavior: 'smooth'});
+    this.disabled = true;
+    this.textContent = 'Cuestionario corregido ✓';
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: correctas,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora
+    });
+});
+</script>
+</body>
+</html>
