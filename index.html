@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redes Informáticas, Conectividad y Diagnóstico con IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+    :root {
+        --indigo: #667eea;
+        --purple: #764ba2;
+        --ink: #1f2340;
+        --paper: #f4f5fb;
+        --card: #ffffff;
+        --line: #e2e4f3;
+        --green: #22b573;
+        --amber: #e0a72e;
+        --red: #d64545;
+        --muted: #8b8fa8;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Inter', -apple-system, sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+    h1, h2, h3, .display { font-family: 'Sora', 'Inter', sans-serif; }
+
+    /* ---------- HERO ---------- */
+    .hero {
+        background: linear-gradient(135deg, var(--indigo) 0%, var(--purple) 100%);
+        color: white;
+        padding: 56px 24px 40px;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 2; }
+    .eyebrow {
+        font-size: 0.8em; letter-spacing: 0.14em; text-transform: uppercase;
+        opacity: 0.85; margin-bottom: 10px; font-weight: 600;
+    }
+    .hero h1 { font-size: 2.6em; font-weight: 800; line-height: 1.15; max-width: 700px; }
+    .hero p.sub { margin-top: 14px; font-size: 1.15em; opacity: 0.92; max-width: 620px; }
+
+    /* Network topology decoration */
+    .net-deco { position: absolute; inset: 0; z-index: 1; opacity: 0.5; pointer-events: none; }
+
+    /* ---------- PROGRESS RAIL ---------- */
+    .rail-wrap { max-width: 1100px; margin: 34px auto 0; padding: 0 24px; }
+    .rail-label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+    .rail-label span:first-child { font-weight: 600; font-size: 0.95em; }
+    .rail-label span:last-child { font-size: 0.85em; opacity: 0.85; }
+    .rail {
+        display: flex; align-items: center; overflow-x: auto; padding: 6px 2px 14px;
+        scrollbar-width: thin;
+    }
+    .rail-node-wrap { display: flex; align-items: center; flex-shrink: 0; }
+    .rail-node {
+        width: 34px; height: 34px; border-radius: 50%;
+        background: rgba(255,255,255,0.18); border: 2px solid rgba(255,255,255,0.55);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.78em; font-weight: 700; color: white; cursor: pointer;
+        transition: transform 0.15s, background 0.2s; flex-shrink: 0;
+    }
+    .rail-node:hover { transform: scale(1.12); }
+    .rail-node.on { background: var(--green); border-color: var(--green); }
+    .rail-node.partial { background: var(--amber); border-color: var(--amber); }
+    .rail-line { width: 26px; height: 2px; background: rgba(255,255,255,0.35); flex-shrink: 0; }
+
+    /* ---------- TOP BAR CONTROLS ---------- */
+    .controls {
+        max-width: 1100px; margin: 0 auto; padding: 18px 24px 0;
+        display: flex; justify-content: flex-end; gap: 10px;
+    }
+    .btn {
+        border: none; border-radius: 10px; padding: 10px 18px; font-family: 'Inter', sans-serif;
+        font-size: 0.92em; font-weight: 600; cursor: pointer; transition: all 0.15s;
+        display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-ghost { background: white; color: var(--indigo); border: 1.5px solid var(--line); }
+    .btn-ghost:hover { border-color: var(--indigo); }
+    .btn-primary { background: var(--indigo); color: white; }
+    .btn-primary:hover { background: var(--purple); }
+    .btn-danger { background: #fdeaea; color: var(--red); }
+    .btn-danger:hover { background: #fcdada; }
+
+    /* ---------- TEACHER BANNER ---------- */
+    .teacher-banner {
+        display: none; max-width: 1100px; margin: 16px auto 0; padding: 14px 22px;
+        background: #fff6e0; border: 1.5px solid var(--amber); border-radius: 12px;
+        align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    .teacher-banner.show { display: flex; }
+    .teacher-banner .msg { font-size: 0.95em; }
+    .teacher-banner .msg strong { color: #8a6300; }
+    .teacher-banner .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* ---------- MAIN GRID ---------- */
+    main { max-width: 1100px; margin: 30px auto 80px; padding: 0 24px; }
+
+    .filter-bar {
+        display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; align-items: center;
+    }
+    .filter-bar input {
+        flex: 1; min-width: 200px; padding: 11px 16px; border-radius: 10px;
+        border: 1.5px solid var(--line); font-family: 'Inter', sans-serif; font-size: 0.95em;
+    }
+    .filter-bar input:focus { outline: none; border-color: var(--indigo); }
+    .summary-pill {
+        background: white; border: 1.5px solid var(--line); border-radius: 10px;
+        padding: 10px 16px; font-size: 0.88em; color: var(--muted); white-space: nowrap;
+    }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+
+    .card {
+        background: var(--card); border-radius: 16px; border: 1.5px solid var(--line);
+        padding: 22px 22px 18px; transition: box-shadow 0.2s, transform 0.2s; scroll-margin-top: 20px;
+    }
+    .card:hover { box-shadow: 0 10px 28px rgba(90, 90, 160, 0.12); }
+    .card.dimmed { opacity: 0.55; }
+
+    .card-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+    .card-num {
+        width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+        background: linear-gradient(135deg, var(--indigo), var(--purple));
+        color: white; display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1.05em;
+    }
+    .card-title { font-size: 1.12em; font-weight: 700; line-height: 1.3; }
+    .card-title small { display: block; font-weight: 500; color: var(--muted); font-size: 0.72em; margin-top: 2px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+    .item-row {
+        display: flex; align-items: center; gap: 10px; padding: 10px 4px;
+        border-top: 1px solid #f0f1f8;
+    }
+    .item-row:first-of-type { border-top: none; margin-top: 4px; }
+    .item-icon { font-size: 1.15em; width: 22px; text-align: center; flex-shrink: 0; }
+    .item-name { flex: 1; font-size: 0.94em; font-weight: 500; }
+    .item-link {
+        text-decoration: none; color: var(--indigo); font-size: 0.85em; font-weight: 600;
+        padding: 6px 12px; border-radius: 7px; background: #eef0ff; white-space: nowrap;
+    }
+    .item-link:hover { background: #dde1ff; }
+    .item-tag {
+        font-size: 0.78em; font-weight: 600; color: var(--muted); background: #f0f1f8;
+        padding: 5px 10px; border-radius: 7px; white-space: nowrap;
+    }
+
+    /* Toggle switch (teacher mode) */
+    .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+        position: absolute; cursor: pointer; inset: 0; background: #d7d9ea;
+        border-radius: 22px; transition: 0.2s;
+    }
+    .slider::before {
+        content: ""; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px;
+        background: white; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .switch input:checked + .slider { background: var(--green); }
+    .switch input:checked + .slider::before { transform: translateX(18px); }
+
+    /* ---------- LOGIN MODAL ---------- */
+    .modal-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(31,35,64,0.55);
+        align-items: center; justify-content: center; z-index: 100; padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+        background: white; border-radius: 16px; padding: 32px; max-width: 380px; width: 100%;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .modal h3 { font-size: 1.3em; margin-bottom: 6px; }
+    .modal p { color: var(--muted); font-size: 0.9em; margin-bottom: 20px; }
+    .modal input {
+        width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--line);
+        font-size: 1em; margin-bottom: 10px; font-family: 'Inter', sans-serif;
+    }
+    .modal input:focus { outline: none; border-color: var(--indigo); }
+    .modal .error { color: var(--red); font-size: 0.85em; margin-bottom: 10px; display: none; }
+    .modal .error.show { display: block; }
+    .modal .modal-actions { display: flex; gap: 10px; margin-top: 6px; }
+    .modal .modal-actions .btn { flex: 1; justify-content: center; }
+
+    footer {
+        text-align: center; padding: 30px 20px 50px; color: var(--muted); font-size: 0.85em;
+    }
+
+    @media (max-width: 640px) {
+        .hero h1 { font-size: 1.9em; }
+        .grid { grid-template-columns: 1fr; }
+    }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+    <svg class="net-deco" viewBox="0 0 1100 260" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="white" stroke-width="1">
+            <line x1="60" y1="40" x2="220" y2="110"></line>
+            <line x1="220" y1="110" x2="140" y2="200"></line>
+            <line x1="220" y1="110" x2="380" y2="60"></line>
+            <line x1="380" y1="60" x2="520" y2="150"></line>
+            <line x1="520" y1="150" x2="700" y2="90"></line>
+            <line x1="700" y1="90" x2="860" y2="180"></line>
+            <line x1="860" y1="180" x2="1020" y2="60"></line>
+            <line x1="700" y1="90" x2="760" y2="230"></line>
+            <line x1="380" y1="60" x2="300" y2="220"></line>
+        </g>
+        <g fill="white">
+            <circle cx="60" cy="40" r="4"></circle><circle cx="220" cy="110" r="5"></circle><circle cx="140" cy="200" r="4"></circle>
+            <circle cx="380" cy="60" r="4"></circle><circle cx="520" cy="150" r="5"></circle><circle cx="700" cy="90" r="4"></circle>
+            <circle cx="860" cy="180" r="5"></circle><circle cx="1020" cy="60" r="4"></circle><circle cx="760" cy="230" r="4"></circle>
+            <circle cx="300" cy="220" r="4"></circle>
+        </g>
+    </svg>
+    <div class="hero-inner">
+        <div class="eyebrow">Curso · Redes Informáticas</div>
+        <h1>Redes Informáticas, Conectividad y Diagnóstico con IA</h1>
+        <p class="sub">Recorré las 15 clases del curso: contenido, cuestionario de autoevaluación y laboratorio práctico. Tu docente va habilitando el material a medida que avanza el curso.</p>
+    </div>
+
+    <div class="rail-wrap">
+        <div class="rail-label">
+            <span>Progreso del curso</span>
+            <span id="railSummary">1 / 15 clases con material disponible</span>
+        </div>
+        <div class="rail" id="rail"><div class="rail-node-wrap"><div class="rail-node on" title="Clase 1: Fundamentos de Redes">1</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 2: IPv4 y Sistemas Numéricos">2</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 3: IPv6, DHCP y Descubrimiento de Vecinos">3</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 4: Capa de Acceso, Medios y Ethernet">4</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 5: Gateways, NAT, ARP y Enrutamiento">5</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 6: TCP/UDP, DNS y Servicios de Aplicación">6</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 7: ICMP y Herramientas de Diagnóstico">7</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 8: Capa Física, Topologías y Enrutamiento">8</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 9: Conmutación Ethernet y Paquetes IP">9</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 10: Diseño Jerárquico, Nube y Virtualización">10</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 11: Dispositivos Cisco y Solución de Problemas">11</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 12: Solución de Problemas y Soporte de Red">12</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 13: Seguridad: Amenazas y Ataques">13</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 14: Seguridad: Control de Acceso y Defensas">14</div><div class="rail-line"></div></div><div class="rail-node-wrap"><div class="rail-node" title="Clase 15: Diagnóstico de Redes con Inteligencia Artificial">15</div></div></div>
+    </div>
+</div>
+
+<!-- ============ CONTROLS ============ -->
+<div class="controls">
+    <button class="btn btn-ghost" id="btnTeacherToggle">🔒 Modo Docente</button>
+</div>
+
+<div class="teacher-banner" id="teacherBanner">
+    <div class="msg">👩‍🏫 <strong>Modo Docente activo.</strong> Usá las llaves para activar o desactivar cada recurso. No olvides guardar los cambios al terminar.</div>
+    <div class="actions">
+        <button class="btn btn-primary" id="btnDownloadConfig">⬇️ Descargar página actualizada</button>
+        <button class="btn btn-danger" id="btnExitTeacher">Salir</button>
+    </div>
+</div>
+
+<!-- ============ MAIN ============ -->
+<main>
+    <div class="filter-bar">
+        <input type="text" id="searchBox" placeholder="Buscar una clase por nombre o número...">
+        <div class="summary-pill" id="summaryPill">3 / 45 recursos habilitados</div>
+    </div>
+
+    <div class="grid" id="grid"><div class="card" id="card-clase1"><div class="card-head">
+            <div class="card-num">1</div>
+            <div class="card-title">Fundamentos de Redes<small>Clase 1</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <a class="item-link" href="Redes_Clase1_Fundamentos.html" target="_blank" rel="noopener">Abrir</a>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <a class="item-link" href="Redes_Clase1_Cuestionario.html" target="_blank" rel="noopener">Abrir</a>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <a class="item-link" href="Redes_Clase1_Laboratorio_PacketTracer.html" target="_blank" rel="noopener">Abrir</a>
+            </div></div><div class="card dimmed" id="card-clase2"><div class="card-head">
+            <div class="card-num">2</div>
+            <div class="card-title">IPv4 y Sistemas Numéricos<small>Clase 2</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase3"><div class="card-head">
+            <div class="card-num">3</div>
+            <div class="card-title">IPv6, DHCP y Descubrimiento de Vecinos<small>Clase 3</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase4"><div class="card-head">
+            <div class="card-num">4</div>
+            <div class="card-title">Capa de Acceso, Medios y Ethernet<small>Clase 4</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase5"><div class="card-head">
+            <div class="card-num">5</div>
+            <div class="card-title">Gateways, NAT, ARP y Enrutamiento<small>Clase 5</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase6"><div class="card-head">
+            <div class="card-num">6</div>
+            <div class="card-title">TCP/UDP, DNS y Servicios de Aplicación<small>Clase 6</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase7"><div class="card-head">
+            <div class="card-num">7</div>
+            <div class="card-title">ICMP y Herramientas de Diagnóstico<small>Clase 7</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase8"><div class="card-head">
+            <div class="card-num">8</div>
+            <div class="card-title">Capa Física, Topologías y Enrutamiento<small>Clase 8</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase9"><div class="card-head">
+            <div class="card-num">9</div>
+            <div class="card-title">Conmutación Ethernet y Paquetes IP<small>Clase 9</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase10"><div class="card-head">
+            <div class="card-num">10</div>
+            <div class="card-title">Diseño Jerárquico, Nube y Virtualización<small>Clase 10</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase11"><div class="card-head">
+            <div class="card-num">11</div>
+            <div class="card-title">Dispositivos Cisco y Solución de Problemas<small>Clase 11</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase12"><div class="card-head">
+            <div class="card-num">12</div>
+            <div class="card-title">Solución de Problemas y Soporte de Red<small>Clase 12</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase13"><div class="card-head">
+            <div class="card-num">13</div>
+            <div class="card-title">Seguridad: Amenazas y Ataques<small>Clase 13</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase14"><div class="card-head">
+            <div class="card-num">14</div>
+            <div class="card-title">Seguridad: Control de Acceso y Defensas<small>Clase 14</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div><div class="card dimmed" id="card-clase15"><div class="card-head">
+            <div class="card-num">15</div>
+            <div class="card-title">Diagnóstico de Redes con Inteligencia Artificial<small>Clase 15</small></div>
+        </div><div class="item-row">
+                <div class="item-icon">📘</div>
+                <div class="item-name">Contenido de la clase</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">📋</div>
+                <div class="item-name">Cuestionario</div>
+                <span class="item-tag">Próximamente</span>
+            </div><div class="item-row">
+                <div class="item-icon">🧪</div>
+                <div class="item-name">Laboratorio</div>
+                <span class="item-tag">Próximamente</span>
+            </div></div></div>
+</main>
+
+<footer>
+    Redes Informáticas, Conectividad y Diagnóstico con IA — Material de cátedra
+</footer>
+
+<!-- ============ LOGIN MODAL ============ -->
+<div class="modal-overlay" id="loginModal">
+    <div class="modal">
+        <h3>Acceso Docente</h3>
+        <p>Ingresá la contraseña para activar o desactivar material del curso.</p>
+        <input type="password" id="passwordInput" placeholder="Contraseña" autocomplete="off">
+        <div class="error show" id="loginError">Contraseña incorrecta. Probá de nuevo.</div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" id="btnCancelLogin">Cancelar</button>
+            <button class="btn btn-primary" id="btnConfirmLogin">Ingresar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN DEL CURSO — datos de las 15 clases
+// Si renombraste algún archivo en tu repositorio, actualizá el
+// campo "archivo" correspondiente acá abajo.
+// ═══════════════════════════════════════════════════════════════
+const TEACHER_PASSWORD = "010806jp";
+
+const CLASES = [
+    { id: "clase1",  titulo: "Fundamentos de Redes",
+      contenido: "Redes_Clase1_Fundamentos.html",
+      cuestionario: "Redes_Clase1_Cuestionario.html",
+      laboratorio: "Redes_Clase1_Laboratorio_PacketTracer.html" },
+    { id: "clase2",  titulo: "IPv4 y Sistemas Numéricos",
+      contenido: "Redes_Clase2_IPv4.html",
+      cuestionario: "Redes_Clase2_Cuestionario.html",
+      laboratorio: "Redes_Clase2_Laboratorio_PacketTracer.html" },
+    { id: "clase3",  titulo: "IPv6, DHCP y Descubrimiento de Vecinos",
+      contenido: "Redes_Clase3_IPv6_DHCP.html",
+      cuestionario: "Redes_Clase3_Cuestionario.html",
+      laboratorio: "Redes_Clase3_Laboratorio_PacketTracer.html" },
+    { id: "clase4",  titulo: "Capa de Acceso, Medios y Ethernet",
+      contenido: "Redes_Clase4_CapaAcceso.html",
+      cuestionario: "Redes_Clase4_Cuestionario.html",
+      laboratorio: "Redes_Clase4_Laboratorio_PacketTracer.html" },
+    { id: "clase5",  titulo: "Gateways, NAT, ARP y Enrutamiento",
+      contenido: "Redes_Clase5_Comunicaciones.html",
+      cuestionario: "Redes_Clase5_Cuestionario.html",
+      laboratorio: "Redes_Clase5_Laboratorio_PacketTracer.html" },
+    { id: "clase6",  titulo: "TCP/UDP, DNS y Servicios de Aplicación",
+      contenido: "Redes_Clase6_TCP_UDP_DNS.html",
+      cuestionario: "Redes_Clase6_Cuestionario.html",
+      laboratorio: "Redes_Clase6_Laboratorio_PacketTracer.html" },
+    { id: "clase7",  titulo: "ICMP y Herramientas de Diagnóstico",
+      contenido: "Redes_Clase7_ICMP_Diagnostico.html",
+      cuestionario: "Redes_Clase7_Cuestionario.html",
+      laboratorio: "Redes_Clase7_Laboratorio_PacketTracer.html" },
+    { id: "clase8",  titulo: "Capa Física, Topologías y Enrutamiento",
+      contenido: "Redes_Clase8_CapaFisica_Topologias.html",
+      cuestionario: "Redes_Clase8_Cuestionario.html",
+      laboratorio: "Redes_Clase8_Laboratorio_PacketTracer.html" },
+    { id: "clase9",  titulo: "Conmutación Ethernet y Paquetes IP",
+      contenido: "Redes_Clase9_Ethernet_Paquetes.html",
+      cuestionario: "Redes_Clase9_Cuestionario.html",
+      laboratorio: "Redes_Clase9_Laboratorio_PacketTracer.html" },
+    { id: "clase10", titulo: "Diseño Jerárquico, Nube y Virtualización",
+      contenido: "Redes_Clase10_DisenoJerarquico_Nube.html",
+      cuestionario: "Redes_Clase10_Cuestionario.html",
+      laboratorio: "Redes_Clase10_Laboratorio_PacketTracer.html" },
+    { id: "clase11", titulo: "Dispositivos Cisco y Solución de Problemas",
+      contenido: "Redes_Clase11_Cisco_Troubleshooting.html",
+      cuestionario: "Redes_Clase11_Cuestionario.html",
+      laboratorio: "Redes_Clase11_Laboratorio_PacketTracer.html" },
+    { id: "clase12", titulo: "Solución de Problemas y Soporte de Red",
+      contenido: "Redes_Clase12_Soporte_Troubleshooting.html",
+      cuestionario: "Redes_Clase12_Cuestionario.html",
+      laboratorio: "Redes_Clase12_Laboratorio_PacketTracer.html" },
+    { id: "clase13", titulo: "Seguridad: Amenazas y Ataques",
+      contenido: "Redes_Clase13_Amenazas_Ataques.html",
+      cuestionario: "Redes_Clase13_Cuestionario.html",
+      laboratorio: "Redes_Clase13_Laboratorio_AnalisisSeguridad.html" },
+    { id: "clase14", titulo: "Seguridad: Control de Acceso y Defensas",
+      contenido: "Redes_Clase14_ControlAcceso_Defensas.html",
+      cuestionario: "Redes_Clase14_Cuestionario.html",
+      laboratorio: "Redes_Clase14_Laboratorio_PacketTracer.html" },
+    { id: "clase15", titulo: "Diagnóstico de Redes con Inteligencia Artificial",
+      contenido: "Redes_Clase15_DiagnosticoIA.html",
+      cuestionario: "Redes_Clase15_Cuestionario.html",
+      laboratorio: "Redes_Clase15_Laboratorio.html" }
+];
+
+const ITEM_META = {
+    contenido:    { label: "Contenido de la clase",  icon: "📘" },
+    cuestionario: { label: "Cuestionario",            icon: "📋" },
+    laboratorio:  { label: "Laboratorio",             icon: "🧪" }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 🔧 ESTADO ACTUAL — qué está activado y qué no.
+// No edites esto a mano: se actualiza solo al usar el Modo Docente
+// y descargar la página actualizada.
+// ═══════════════════════════════════════════════════════════════
+const ESTADO_INICIAL = /*__STATE_START__*/{
+  "clase1": {
+    "contenido": true,
+    "cuestionario": true,
+    "laboratorio": true
+  },
+  "clase2": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase3": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase4": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase5": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase6": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase7": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase8": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase9": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase10": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase11": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase12": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase13": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase14": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  },
+  "clase15": {
+    "contenido": false,
+    "cuestionario": false,
+    "laboratorio": false
+  }
+}/*__STATE_END__*/;
+// ═══════════════════════════════════════════════════════════════
+
+let CONFIG = {};
+let teacherMode = false;
+
+function cargarConfig() {
+    // Copia profunda del estado embebido en la página
+    CONFIG = JSON.parse(JSON.stringify(ESTADO_INICIAL));
+    // Aseguramos que cada clase tenga sus 3 flags aunque falte alguna
+    CLASES.forEach(c => {
+        if (!CONFIG[c.id]) CONFIG[c.id] = { contenido: false, cuestionario: false, laboratorio: false };
+        ['contenido','cuestionario','laboratorio'].forEach(k => {
+            if (typeof CONFIG[c.id][k] !== 'boolean') CONFIG[c.id][k] = false;
+        });
+    });
+}
+
+function render() {
+    renderRail();
+    renderGrid();
+    renderSummary();
+}
+
+function renderRail() {
+    const rail = document.getElementById('rail');
+    rail.innerHTML = '';
+    let clasesConAlgo = 0;
+
+    CLASES.forEach((c, idx) => {
+        const flags = CONFIG[c.id];
+        const activos = [flags.contenido, flags.cuestionario, flags.laboratorio].filter(Boolean).length;
+        if (activos > 0) clasesConAlgo++;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'rail-node-wrap';
+
+        const node = document.createElement('div');
+        node.className = 'rail-node' + (activos === 3 ? ' on' : activos > 0 ? ' partial' : '');
+        node.textContent = idx + 1;
+        node.title = `Clase ${idx+1}: ${c.titulo}`;
+        node.addEventListener('click', () => {
+            document.getElementById('card-' + c.id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        wrap.appendChild(node);
+
+        if (idx < CLASES.length - 1) {
+            const line = document.createElement('div');
+            line.className = 'rail-line';
+            wrap.appendChild(line);
+        }
+        rail.appendChild(wrap);
+    });
+
+    document.getElementById('railSummary').textContent = `${clasesConAlgo} / ${CLASES.length} clases con material disponible`;
+}
+
+function renderSummary() {
+    let total = 0, activos = 0;
+    CLASES.forEach(c => {
+        ['contenido','cuestionario','laboratorio'].forEach(k => {
+            total++;
+            if (CONFIG[c.id][k]) activos++;
+        });
+    });
+    document.getElementById('summaryPill').textContent = `${activos} / ${total} recursos habilitados`;
+}
+
+function renderGrid() {
+    const grid = document.getElementById('grid');
+    const query = (document.getElementById('searchBox').value || '').toLowerCase().trim();
+    grid.innerHTML = '';
+
+    CLASES.forEach((c, idx) => {
+        const numero = idx + 1;
+        const matches = !query || c.titulo.toLowerCase().includes(query) || String(numero).includes(query);
+        if (!matches) return;
+
+        const flags = CONFIG[c.id];
+        const algunoActivo = flags.contenido || flags.cuestionario || flags.laboratorio;
+
+        const card = document.createElement('div');
+        card.className = 'card' + (!algunoActivo && !teacherMode ? ' dimmed' : '');
+        card.id = 'card-' + c.id;
+
+        const head = document.createElement('div');
+        head.className = 'card-head';
+        head.innerHTML = `
+            <div class="card-num">${numero}</div>
+            <div class="card-title">${c.titulo}<small>Clase ${numero}</small></div>
+        `;
+        card.appendChild(head);
+
+        ['contenido','cuestionario','laboratorio'].forEach(key => {
+            const meta = ITEM_META[key];
+            const isOn = flags[key];
+            const row = document.createElement('div');
+            row.className = 'item-row';
+
+            const showAsLink = isOn || teacherMode;
+            const rightControl = teacherMode
+                ? `<label class="switch">
+                        <input type="checkbox" data-clase="${c.id}" data-item="${key}" ${isOn ? 'checked' : ''}>
+                        <span class="slider"></span>
+                   </label>`
+                : (isOn
+                    ? `<a class="item-link" href="${c[key]}" target="_blank" rel="noopener">Abrir</a>`
+                    : `<span class="item-tag">Próximamente</span>`);
+
+            row.innerHTML = `
+                <div class="item-icon">${meta.icon}</div>
+                <div class="item-name">${meta.label}</div>
+                ${rightControl}
+            `;
+            card.appendChild(row);
+        });
+
+        grid.appendChild(card);
+    });
+}
+
+// ---------- Teacher mode toggles ----------
+document.getElementById('grid').addEventListener('change', (e) => {
+    if (e.target.matches('input[type=checkbox][data-clase]')) {
+        const claseId = e.target.getAttribute('data-clase');
+        const item = e.target.getAttribute('data-item');
+        CONFIG[claseId][item] = e.target.checked;
+        renderRail();
+        renderSummary();
+    }
+});
+
+document.getElementById('searchBox').addEventListener('input', renderGrid);
+
+// ---------- Login modal ----------
+const loginModal = document.getElementById('loginModal');
+const passwordInput = document.getElementById('passwordInput');
+const loginError = document.getElementById('loginError');
+
+document.getElementById('btnTeacherToggle').addEventListener('click', () => {
+    if (teacherMode) {
+        exitTeacherMode();
+    } else {
+        loginModal.classList.add('show');
+        passwordInput.value = '';
+        loginError.classList.remove('show');
+        passwordInput.focus();
+    }
+});
+
+document.getElementById('btnCancelLogin').addEventListener('click', () => {
+    loginModal.classList.remove('show');
+});
+
+function tryLogin() {
+    if (passwordInput.value === TEACHER_PASSWORD) {
+        teacherMode = true;
+        loginModal.classList.remove('show');
+        document.getElementById('teacherBanner').classList.add('show');
+        document.getElementById('btnTeacherToggle').textContent = '🔓 Modo Docente (activo)';
+        render();
+    } else {
+        loginError.classList.add('show');
+    }
+}
+document.getElementById('btnConfirmLogin').addEventListener('click', tryLogin);
+passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryLogin(); });
+
+function exitTeacherMode() {
+    teacherMode = false;
+    document.getElementById('teacherBanner').classList.remove('show');
+    document.getElementById('btnTeacherToggle').textContent = '🔒 Modo Docente';
+    render();
+}
+document.getElementById('btnExitTeacher').addEventListener('click', exitTeacherMode);
+
+// ---------- Descargar la página completa con el estado actualizado ----------
+document.getElementById('btnDownloadConfig').addEventListener('click', () => {
+    // Guardamos en qué modo estábamos para poder volver después
+    const estabaEnModoDocente = teacherMode;
+
+    // Generamos una vista "limpia" (modo alumno) para que lo que se descargue
+    // sea exactamente lo que van a ver los alumnos, sin el panel docente visible
+    teacherMode = false;
+    document.getElementById('teacherBanner').classList.remove('show');
+    document.getElementById('btnTeacherToggle').textContent = '🔒 Modo Docente';
+    const busquedaPrevia = document.getElementById('searchBox').value;
+    document.getElementById('searchBox').value = '';
+    render();
+
+    let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+    // Reemplazamos el bloque de estado embebido por el estado actual (con los cambios hechos)
+    const nuevoEstado = JSON.stringify(CONFIG, null, 2);
+    html = html.replace(
+        /\/\*__STATE_START__\*\/[\s\S]*?\/\*__STATE_END__\*\//,
+        '/*__STATE_START__*/' + nuevoEstado + '/*__STATE_END__*/'
+    );
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'index.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // Volvemos al modo en el que estábamos antes de descargar
+    document.getElementById('searchBox').value = busquedaPrevia;
+    if (estabaEnModoDocente) {
+        teacherMode = true;
+        document.getElementById('teacherBanner').classList.add('show');
+        document.getElementById('btnTeacherToggle').textContent = '🔓 Modo Docente (activo)';
+        render();
+    }
+
+    alert('Se descargó index.html con los cambios guardados.\n\nSubilo a tu repositorio de GitHub reemplazando el archivo existente (mismo nombre: index.html) y hacé commit. Con eso los cambios quedan visibles para todos tus alumnos.');
+});
+
+// ---------- Init ----------
+(function init() {
+    cargarConfig();
+    render();
+})();
+</script>
+
+
+<div data-lastpass-root="" style="position: absolute !important; top: 0px !important; left: 0px !important; height: 0px !important; width: 0px !important; display: initial !important;"></div></body></html>
