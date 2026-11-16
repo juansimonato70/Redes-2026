@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario Final Integrador - Redes Informáticas</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6ff; padding: 30px; }
+    .contenedor { max-width: 850px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px 35px; box-shadow: 0 4px 20px rgba(102,126,234,0.15); }
+
+    h1 { color: #667eea; font-size: 2em; text-align: center; margin-bottom: 6px; }
+    .subtitulo { text-align: center; color: #764ba2; font-size: 1em; margin-bottom: 25px; }
+
+    .intro-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%);
+        border: 2px solid #667eea;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        font-size: 0.9em;
+        color: #333;
+    }
+
+    .pregunta {
+        background: #f8f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 8px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+        transition: border-color 0.2s;
+    }
+
+    .pregunta-num { color: #667eea; font-weight: bold; font-size: 0.85em; margin-bottom: 4px; }
+    .pregunta-texto { color: #222; font-size: 1em; font-weight: 600; margin-bottom: 10px; }
+
+    .opciones { list-style: none; }
+
+    .opcion {
+        display: block;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        background: white;
+        border: 1px solid #d8ddf5;
+        color: #333;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .opcion:hover { background: #eef1ff; }
+    .opcion input { margin-right: 8px; }
+
+    /* Estado tras corregir */
+    .pregunta.corregida .opcion { cursor: default; }
+    .pregunta.corregida .opcion:hover { background: white; }
+    .pregunta.corregida .opcion.marcar-correcta {
+        background: #e8f9ee; border-color: #34c26a; color: #1e7a41; font-weight: bold;
+    }
+    .pregunta.corregida .opcion.marcar-incorrecta {
+        background: #fdecec; border-color: #e35a5a; color: #a33131;
+    }
+
+    .justificacion {
+        display: none;
+        margin-top: 8px;
+        font-size: 0.82em;
+        color: #555;
+        font-style: italic;
+        border-top: 1px dashed #d8ddf5;
+        padding-top: 6px;
+    }
+    .pregunta.corregida .justificacion { display: block; }
+
+    .icono-resultado { font-weight: bold; margin-right: 4px; }
+
+    .btn-corregir {
+        display: block;
+        margin: 10px auto 25px auto;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 22px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .btn-corregir:hover { background: #5568d3; }
+    .btn-corregir:disabled { background: #b7bfe8; cursor: not-allowed; }
+
+    .resultado-final {
+        display: none;
+        text-align: center;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 0 0 25px 0;
+        border: 2px solid #667eea;
+    }
+    .resultado-final.mostrar { display: block; }
+    .resultado-final .puntaje { font-size: 2.2em; font-weight: bold; color: #667eea; }
+    .resultado-final .mensaje { font-size: 1em; color: #555; margin-top: 6px; }
+    .resultado-final.aprobado { background: #e8f9ee; border-color: #34c26a; }
+    .resultado-final.aprobado .puntaje { color: #1e7a41; }
+    .resultado-final.reprobado { background: #fff6e8; border-color: #f0a63c; }
+    .resultado-final.reprobado .puntaje { color: #b3711a; }
+
+    .pie { text-align: center; margin-top: 10px; font-size: 0.85em; color: #888; }
+
+    .aviso-incompleto {
+        display: none;
+        text-align: center;
+        color: #a33131;
+        background: #fdecec;
+        border: 1px solid #e35a5a;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+    }
+    .aviso-incompleto.mostrar { display: block; }
+
+    .datos-alumno {
+        background: #f8f9ff;
+        border: 2px solid #d8ddf5;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
+    .datos-alumno label {
+        display: block;
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 4px;
+    }
+    .datos-alumno .fila-datos {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+    .datos-alumno input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d8ddf5;
+        border-radius: 6px;
+        font-size: 0.95em;
+        font-family: inherit;
+        margin-bottom: 4px;
+    }
+    .datos-alumno input:focus { outline: 2px solid #667eea; }
+    .datos-alumno input.campo-error { border-color: #e35a5a; background: #fdecec; }
+
+    .estado-envio {
+        display: none;
+        text-align: center;
+        font-size: 0.85em;
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 6px;
+    }
+    .estado-envio.mostrar { display: block; }
+    .estado-envio.enviando { background: #fff6e8; color: #b3711a; }
+    .estado-envio.ok { background: #e8f9ee; color: #1e7a41; }
+    .estado-envio.error, .estado-envio.aviso { background: #fdecec; color: #a33131; }
+
+    .tag-clase-resumen { font-weight: 600; }
+    .pregunta-texto, .opcion, .justificacion { overflow-wrap: anywhere; }
+    .pregunta-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+    .pregunta-cab .pregunta-num { margin-bottom: 0; }
+    .tag-clase { font-size: 0.72em; color: #764ba2; background: #f0eaff; border-radius: 10px; padding: 2px 10px; font-weight: 600; }
+    .pregunta.sin-responder { border-left-color: #e35a5a; background: #fff6f6; }
+
+    .barra-progreso {
+        position: sticky; top: 0; z-index: 10;
+        background: white; border-radius: 0 0 12px 12px;
+        padding: 10px 4px 12px; margin: -30px -35px 18px; padding-left: 35px; padding-right: 35px;
+        box-shadow: 0 3px 10px rgba(102,126,234,0.12);
+    }
+    .barra-progreso .texto { display: flex; justify-content: space-between; font-size: 0.82em; color: #555; margin-bottom: 6px; }
+    .barra-progreso .pista { height: 7px; background: #e6e9fb; border-radius: 6px; overflow: hidden; }
+    .barra-progreso .relleno { height: 100%; width: 0; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.2s; }
+
+    .repaso { display: none; text-align: left; margin-top: 16px; padding-top: 14px; border-top: 1px dashed #c9cff0; font-size: 0.9em; color: #444; }
+    .repaso.mostrar { display: block; }
+    .repaso h3 { font-size: 0.95em; color: #764ba2; margin-bottom: 8px; }
+    .repaso ul { margin-left: 20px; }
+    .repaso li { margin-bottom: 4px; }
+    .repaso .ok { color: #1e7a41; font-weight: 600; }
+
+    @media (max-width: 640px) {
+        body { padding: 12px; }
+        .contenedor { padding: 20px 16px; }
+        .barra-progreso { margin: -20px -16px 14px; padding-left: 16px; padding-right: 16px; }
+        .datos-alumno .fila-datos { grid-template-columns: 1fr; }
+    }
+</style>
+</head>
+<body>
+<div class="contenedor">
+    <div class="barra-progreso" aria-live="polite">
+        <div class="texto"><span>Progreso</span><span id="progresoTexto">0 / 40 respondidas</span></div>
+        <div class="pista"><div class="relleno" id="progresoRelleno"></div></div>
+    </div>
+
+    <h1>🏁 Cuestionario Final</h1>
+    <p class="subtitulo">Integrador · Clases 1 a 15</p>
+
+    <div class="intro-box">
+        Respondé las 40 preguntas, que repasan los temas de las 15 clases del curso, y presioná <strong>"Corregir cuestionario"</strong> al final. Vas a ver tu puntaje, la justificación de cada respuesta correcta y una lista de las clases que te conviene repasar.
+    </div>
+
+    <div class="datos-alumno">
+        <div class="fila-datos">
+            <div>
+                <label for="nombreAlumno">Nombre y Apellido *</label>
+                <input type="text" id="nombreAlumno" placeholder="Ej: Juan Pérez" autocomplete="name">
+            </div>
+            <div>
+                <label for="comisionAlumno">Comisión (opcional)</label>
+                <input type="text" id="comisionAlumno" placeholder="Ej: Comisión A">
+            </div>
+        </div>
+    </div>
+
+    <div id="resultadoFinal" class="resultado-final">
+        <div class="puntaje" id="puntajeTexto"></div>
+        <div class="mensaje" id="mensajeTexto"></div>
+        <div class="repaso" id="repaso"></div>
+        <div class="estado-envio" id="estadoEnvio"></div>
+    </div>
+
+    <div id="avisoIncompleto" class="aviso-incompleto">⚠️ Respondé todas las preguntas antes de corregir. Marqué en rojo las que te faltan.</div>
+
+    <form id="quizForm">
+
+        <div class="pregunta" id="p1" data-correcta="3" data-clase="1">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 1</div>
+                <div class="tag-clase">Clase 1 · Fundamentos de Redes</div>
+            </div>
+            <div class="pregunta-texto">Contratás un plan de 300 Mbps, pero al descargar un archivo grande medís 220 Mbps sostenidos. ¿Cómo se llama esa velocidad real medida, en contraste con la capacidad máxima contratada?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q1" value="0"> Latencia</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="1"> Ancho de banda</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="2"> Jitter</label></li>
+                <li class="opcion"><label><input type="radio" name="q1" value="3"> Rendimiento (throughput)</label></li>
+            </ul>
+            <div class="justificacion">El ancho de banda es la capacidad máxima teórica (los 300 Mbps contratados). El rendimiento es la velocidad efectiva que realmente obtenés, afectada por la latencia y la congestión.</div>
+        </div>
+        <div class="pregunta" id="p2" data-correcta="0" data-clase="1">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 2</div>
+                <div class="tag-clase">Clase 1 · Fundamentos de Redes</div>
+            </div>
+            <div class="pregunta-texto">Una universidad debe unir dos edificios separados por 15 km con un enlace cableado. ¿Qué medio corresponde?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q2" value="0"> Fibra óptica monomodo (láser, hasta 100 km o más)</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="1"> Cable UTP Cat6 (hasta 100 m por tramo)</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="2"> Fibra óptica multimodo (hasta unos 2 km)</label></li>
+                <li class="opcion"><label><input type="radio" name="q2" value="3"> Cable coaxial con conectores BNC</label></li>
+            </ul>
+            <div class="justificacion">La fibra monomodo (núcleo de 9 micrones, fuente láser) alcanza 100 km o más. La multimodo llega a ~2 km y el UTP a 100 m, por lo que no cubren los 15 km.</div>
+        </div>
+        <div class="pregunta" id="p3" data-correcta="1" data-clase="2">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 3</div>
+                <div class="tag-clase">Clase 2 · IPv4 y Sistemas Numéricos</div>
+            </div>
+            <div class="pregunta-texto">¿Cuántos hosts utilizables tiene la subred 192.168.1.0/27?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q3" value="0"> 14</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="1"> 30</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="2"> 32</label></li>
+                <li class="opcion"><label><input type="radio" name="q3" value="3"> 62</label></li>
+            </ul>
+            <div class="justificacion">Una /27 deja 5 bits para hosts: 2⁵ − 2 = 30 (se restan la dirección de red y la de broadcast). Las 32 direcciones totales incluyen esas dos.</div>
+        </div>
+        <div class="pregunta" id="p4" data-correcta="1" data-clase="2">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 4</div>
+                <div class="tag-clase">Clase 2 · IPv4 y Sistemas Numéricos</div>
+            </div>
+            <div class="pregunta-texto">Dividís 192.168.10.0/24 en 4 subredes iguales (/26). ¿Cuál es la dirección de broadcast de la segunda subred?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q4" value="0"> 192.168.10.63</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="1"> 192.168.10.127</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="2"> 192.168.10.128</label></li>
+                <li class="opcion"><label><input type="radio" name="q4" value="3"> 192.168.10.191</label></li>
+            </ul>
+            <div class="justificacion">El incremento es 256 − 192 = 64. La segunda subred es 192.168.10.64/26: hosts .65 a .126 y broadcast .127. La .63 es el broadcast de la primera subred.</div>
+        </div>
+        <div class="pregunta" id="p5" data-correcta="2" data-clase="2">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 5</div>
+                <div class="tag-clase">Clase 2 · IPv4 y Sistemas Numéricos</div>
+            </div>
+            <div class="pregunta-texto">Una PC configurada por DHCP muestra la IP 169.254.37.12 y no puede navegar. ¿Qué indica esa dirección?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q5" value="0"> Que el router le asignó una IP pública válida</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="1"> Que está usando la dirección de loopback</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="2"> Que no pudo contactar al servidor DHCP y se autoasignó una dirección APIPA</label></li>
+                <li class="opcion"><label><input type="radio" name="q5" value="3"> Que pertenece a un grupo multicast</label></li>
+            </ul>
+            <div class="justificacion">El rango 169.254.0.0/16 es APIPA (link-local): el equipo lo usa cuando falla DHCP. Solo se comunica con otros equipos APIPA del mismo segmento y no tiene gateway ni DNS.</div>
+        </div>
+        <div class="pregunta" id="p6" data-correcta="2" data-clase="2">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 6</div>
+                <div class="tag-clase">Clase 2 · IPv4 y Sistemas Numéricos</div>
+            </div>
+            <div class="pregunta-texto">¿Cuál de las siguientes direcciones NO pertenece a un rango privado (RFC 1918)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q6" value="0"> 10.200.1.1</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="1"> 172.16.5.5</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="2"> 172.32.0.1</label></li>
+                <li class="opcion"><label><input type="radio" name="q6" value="3"> 192.168.100.1</label></li>
+            </ul>
+            <div class="justificacion">El rango privado de clase B es 172.16.0.0 a 172.31.255.255 (172.16.0.0/12). La 172.32.0.1 queda fuera de ese bloque, por lo que es una dirección pública.</div>
+        </div>
+        <div class="pregunta" id="p7" data-correcta="1" data-clase="3">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 7</div>
+                <div class="tag-clase">Clase 3 · IPv6, DHCP y Descubrimiento de Vecinos</div>
+            </div>
+            <div class="pregunta-texto">¿Cuál es la forma abreviada correcta de 2001:0db8:0000:0000:0000:0000:0000:0001?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q7" value="0"> 2001:db8::0::1</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="1"> 2001:db8::1</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="2"> 2001:db8:1</label></li>
+                <li class="opcion"><label><input type="radio" name="q7" value="3"> 2001::db8::1</label></li>
+            </ul>
+            <div class="justificacion">Se omiten los ceros iniciales de cada hexteto y la secuencia de hextetos en cero se reemplaza por '::'. El '::' solo puede usarse UNA vez; de lo contrario la dirección sería ambigua.</div>
+        </div>
+        <div class="pregunta" id="p8" data-correcta="3" data-clase="3">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 8</div>
+                <div class="tag-clase">Clase 3 · IPv6, DHCP y Descubrimiento de Vecinos</div>
+            </div>
+            <div class="pregunta-texto">Una laptop recién conectada no tiene IP y envía un DHCP DISCOVER. ¿Qué direcciones IP de origen y destino lleva ese mensaje?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q8" value="0"> Origen 192.168.1.1 y destino 224.0.0.1</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="1"> Origen 169.254.0.1 y destino la IP del servidor DHCP</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="2"> Origen su dirección APIPA y destino 192.168.1.255</label></li>
+                <li class="opcion"><label><input type="radio" name="q8" value="3"> Origen 0.0.0.0 y destino 255.255.255.255</label></li>
+            </ul>
+            <div class="justificacion">Como el cliente todavía no tiene IP usa 0.0.0.0 de origen y envía un broadcast limitado (255.255.255.255) por UDP, del puerto 68 al 67, para que lo reciba cualquier servidor DHCP.</div>
+        </div>
+        <div class="pregunta" id="p9" data-correcta="3" data-clase="3">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 9</div>
+                <div class="tag-clase">Clase 3 · IPv6, DHCP y Descubrimiento de Vecinos</div>
+            </div>
+            <div class="pregunta-texto">Un router IPv6 envía Router Advertisements con la bandera O activada y la M desactivada. ¿Cómo se configuran los clientes?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q9" value="0"> Dirección completa por DHCPv6 Stateful</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="1"> Solo con SLAAC, sin usar DHCPv6 en absoluto</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="2"> Con IP estática obligatoria</label></li>
+                <li class="opcion"><label><input type="radio" name="q9" value="3"> Dirección por SLAAC y datos adicionales (como DNS) por DHCPv6 Stateless</label></li>
+            </ul>
+            <div class="justificacion">Con O activada (y M no), el cliente arma su dirección con SLAAC y consulta a DHCPv6 solo por información adicional. La bandera M (Managed) es la que indica DHCPv6 Stateful.</div>
+        </div>
+        <div class="pregunta" id="p10" data-correcta="0" data-clase="4">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 10</div>
+                <div class="tag-clase">Clase 4 · Capa de Acceso, Medios y Ethernet</div>
+            </div>
+            <div class="pregunta-texto">Querés que un punto de acceso Wi-Fi cubra la mayor distancia posible, aun a costa de más interferencias. ¿Qué banda elegís?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q10" value="0"> 2,4 GHz</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="1"> 5 GHz</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="2"> Bluetooth</label></li>
+                <li class="opcion"><label><input type="radio" name="q10" value="3"> La banda no influye en el alcance</label></li>
+            </ul>
+            <div class="justificacion">La banda de 2,4 GHz ofrece mayor alcance, mientras que la de 5 GHz tiene menos interferencias pero menor cobertura.</div>
+        </div>
+        <div class="pregunta" id="p11" data-correcta="3" data-clase="4">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 11</div>
+                <div class="tag-clase">Clase 4 · Capa de Acceso, Medios y Ethernet</div>
+            </div>
+            <div class="pregunta-texto">¿Qué protocolos pertenecen a la capa de Internet del modelo TCP/IP?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q11" value="0"> HTTP, FTP y DNS</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="1"> TCP y UDP</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="2"> Ethernet y Wi-Fi (802.11)</label></li>
+                <li class="opcion"><label><input type="radio" name="q11" value="3"> IPv4, IPv6 e ICMP</label></li>
+            </ul>
+            <div class="justificacion">La capa de Internet determina el mejor camino a través de la red con IPv4, IPv6 e ICMP. HTTP/FTP/DNS son de Aplicación, TCP/UDP de Transporte y Ethernet/WLAN de Acceso a la red.</div>
+        </div>
+        <div class="pregunta" id="p12" data-correcta="1" data-clase="5">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 12</div>
+                <div class="tag-clase">Clase 5 · Gateways, NAT, ARP y Enrutamiento</div>
+            </div>
+            <div class="pregunta-texto">La PC 192.168.1.10/24 envía un paquete al servidor 10.0.0.5. ¿Qué dirección MAC de destino lleva la trama que sale de la PC?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q12" value="0"> La MAC del servidor 10.0.0.5</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="1"> La MAC del gateway (router)</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="2"> FF:FF:FF:FF:FF:FF</label></li>
+                <li class="opcion"><label><input type="radio" name="q12" value="3"> La MAC del switch</label></li>
+            </ul>
+            <div class="justificacion">El destino es remoto (otra red), así que la PC entrega la trama al gateway, cuya MAC obtiene por ARP. La IP destino sigue siendo la del servidor; solo las MAC cambian en cada salto.</div>
+        </div>
+        <div class="pregunta" id="p13" data-correcta="3" data-clase="5">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 13</div>
+                <div class="tag-clase">Clase 5 · Gateways, NAT, ARP y Enrutamiento</div>
+            </div>
+            <div class="pregunta-texto">¿Hasta dónde llega un ARP Request?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q13" value="0"> Por Internet, hasta el host destino</label></li>
+                <li class="opcion"><label><input type="radio" name="q13" value="1"> Hasta el servidor DNS configurado</label></li>
+                <li class="opcion"><label><input type="radio" name="q13" value="2"> Únicamente hasta el gateway</label></li>
+                <li class="opcion"><label><input type="radio" name="q13" value="3"> Solo hasta el dominio de broadcast local: los routers no lo reenvían</label></li>
+            </ul>
+            <div class="justificacion">ARP solo funciona dentro de la misma red local. Para comunicarse con redes remotas, el host resuelve por ARP la MAC del gateway, no la del destino final.</div>
+        </div>
+        <div class="pregunta" id="p14" data-correcta="2" data-clase="5">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 14</div>
+                <div class="tag-clase">Clase 5 · Gateways, NAT, ARP y Enrutamiento</div>
+            </div>
+            <div class="pregunta-texto">Cien PCs con IPs privadas 192.168.1.x salen a Internet por un router con una única IP pública. Un servidor web recibe una solicitud de la PC 192.168.1.10. ¿Qué IP de origen ve?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q14" value="0"> 192.168.1.10</label></li>
+                <li class="opcion"><label><input type="radio" name="q14" value="1"> La IP del servidor DNS</label></li>
+                <li class="opcion"><label><input type="radio" name="q14" value="2"> La IP pública del router (gracias a NAT)</label></li>
+                <li class="opcion"><label><input type="radio" name="q14" value="3"> 255.255.255.255</label></li>
+            </ul>
+            <div class="justificacion">NAT traduce la IP privada de origen a la IP pública del router. Por eso muchos dispositivos comparten una sola IP pública, y la respuesta vuelve al router, que la reenvía a la PC.</div>
+        </div>
+        <div class="pregunta" id="p15" data-correcta="3" data-clase="6">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 15</div>
+                <div class="tag-clase">Clase 6 · TCP/UDP, DNS y Servicios de Aplicación</div>
+            </div>
+            <div class="pregunta-texto">¿Cuál es el orden correcto de los tres mensajes del three-way handshake de TCP?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q15" value="0"> SYN, ACK, SYN-ACK</label></li>
+                <li class="opcion"><label><input type="radio" name="q15" value="1"> SYN-ACK, SYN, ACK</label></li>
+                <li class="opcion"><label><input type="radio" name="q15" value="2"> ACK, SYN, SYN-ACK</label></li>
+                <li class="opcion"><label><input type="radio" name="q15" value="3"> SYN, SYN-ACK, ACK</label></li>
+            </ul>
+            <div class="justificacion">El cliente inicia con SYN, el servidor responde con SYN-ACK y el cliente confirma con ACK. Recién ahí se establece la conexión y comienzan a enviarse datos.</div>
+        </div>
+        <div class="pregunta" id="p16" data-correcta="1" data-clase="6">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 16</div>
+                <div class="tag-clase">Clase 6 · TCP/UDP, DNS y Servicios de Aplicación</div>
+            </div>
+            <div class="pregunta-texto">Abrís dos pestañas hacia el mismo sitio HTTPS (puerto 443) desde la misma PC. ¿Cómo distingue el servidor ambas conexiones?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q16" value="0"> Porque cada pestaña usa un puerto de destino distinto</label></li>
+                <li class="opcion"><label><input type="radio" name="q16" value="1"> Por el puerto de origen distinto de cada conexión (parte de la tupla de 5 elementos)</label></li>
+                <li class="opcion"><label><input type="radio" name="q16" value="2"> Porque cada pestaña usa un protocolo de transporte distinto</label></li>
+                <li class="opcion"><label><input type="radio" name="q16" value="3"> No puede distinguirlas, por eso se atienden una por vez</label></li>
+            </ul>
+            <div class="justificacion">Cada conexión se identifica por la tupla (IP origen, puerto origen, IP destino, puerto destino, protocolo). El destino es el mismo (443), pero el cliente asigna un puerto de origen dinámico distinto a cada pestaña.</div>
+        </div>
+        <div class="pregunta" id="p17" data-correcta="0" data-clase="6">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 17</div>
+                <div class="tag-clase">Clase 6 · TCP/UDP, DNS y Servicios de Aplicación</div>
+            </div>
+            <div class="pregunta-texto">Una empresa cambia la IP de su servidor web, pero los usuarios siguen entrando con el mismo nombre de dominio sin notar nada. ¿Qué servicio lo hace posible?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q17" value="0"> DNS, que asocia el nombre de dominio con la nueva IP</label></li>
+                <li class="opcion"><label><input type="radio" name="q17" value="1"> DHCP, que asigna la IP al servidor</label></li>
+                <li class="opcion"><label><input type="radio" name="q17" value="2"> NAT, que traduce direcciones</label></li>
+                <li class="opcion"><label><input type="radio" name="q17" value="3"> ARP, que resuelve la dirección MAC</label></li>
+            </ul>
+            <div class="justificacion">DNS traduce nombres a direcciones IP, así que una empresa puede cambiar su IP sin cambiar su nombre de dominio: solo actualiza el registro DNS.</div>
+        </div>
+        <div class="pregunta" id="p18" data-correcta="0" data-clase="7">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 18</div>
+                <div class="tag-clase">Clase 7 · ICMP y Herramientas de Diagnóstico</div>
+            </div>
+            <div class="pregunta-texto">Hacés ping a 8.8.8.8 y responde bien, pero ping www.google.com devuelve 'No se pudo resolver el nombre'. ¿Dónde está el problema?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q18" value="0"> En la resolución de nombres (DNS)</label></li>
+                <li class="opcion"><label><input type="radio" name="q18" value="1"> En el cable de red de tu PC</label></li>
+                <li class="opcion"><label><input type="radio" name="q18" value="2"> En el gateway predeterminado</label></li>
+                <li class="opcion"><label><input type="radio" name="q18" value="3"> En la máscara de subred</label></li>
+            </ul>
+            <div class="justificacion">Si responde por IP pero no por nombre, la conectividad IP funciona y falla DNS. Es un diagnóstico clásico: comparar ping por IP contra ping por nombre.</div>
+        </div>
+        <div class="pregunta" id="p19" data-correcta="2" data-clase="7">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 19</div>
+                <div class="tag-clase">Clase 7 · ICMP y Herramientas de Diagnóstico</div>
+            </div>
+            <div class="pregunta-texto">Un tracert muestra los mismos dos routers repitiéndose salto tras salto hasta llegar al máximo de 30 saltos. ¿Qué indica?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q19" value="0"> La latencia normal de un enlace intercontinental</label></li>
+                <li class="opcion"><label><input type="radio" name="q19" value="1"> Que el destino bloquea ICMP</label></li>
+                <li class="opcion"><label><input type="radio" name="q19" value="2"> Un loop de enrutamiento</label></li>
+                <li class="opcion"><label><input type="radio" name="q19" value="3"> Que el servidor DNS no resuelve el nombre</label></li>
+            </ul>
+            <div class="justificacion">Cuando los mismos routers aparecen una y otra vez antes de agotar el TTL, los paquetes están dando vueltas: hay un loop de enrutamiento.</div>
+        </div>
+        <div class="pregunta" id="p20" data-correcta="0" data-clase="7">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 20</div>
+                <div class="tag-clase">Clase 7 · ICMP y Herramientas de Diagnóstico</div>
+            </div>
+            <div class="pregunta-texto">Un servidor responde 'Tiempo de espera agotado' al ping, pero los usuarios acceden a su sitio web sin problemas. ¿Cuál es la explicación más probable?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q20" value="0"> Un firewall o política del servidor bloquea los ICMP Echo Request</label></li>
+                <li class="opcion"><label><input type="radio" name="q20" value="1"> El servidor está apagado</label></li>
+                <li class="opcion"><label><input type="radio" name="q20" value="2"> El servidor no tiene el puerto 80 abierto</label></li>
+                <li class="opcion"><label><input type="radio" name="q20" value="3"> La máscara de subred del servidor es incorrecta</label></li>
+            </ul>
+            <div class="justificacion">Un 'timeout' de ping no implica que el host esté caído: muchos equipos filtran ICMP por política de seguridad. Por eso no hay que confiar únicamente en ICMP para diagnosticar.</div>
+        </div>
+        <div class="pregunta" id="p21" data-correcta="0" data-clase="8">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 21</div>
+                <div class="tag-clase">Clase 8 · Capa Física, Topologías y Enrutamiento</div>
+            </div>
+            <div class="pregunta-texto">Necesitás conectar dos PCs directamente con UTP, sin switch, y sus placas de red no tienen Auto-MDIX. ¿Qué cable usás?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q21" value="0"> Cable cruzado (crossover)</label></li>
+                <li class="opcion"><label><input type="radio" name="q21" value="1"> Cable directo (straight-through)</label></li>
+                <li class="opcion"><label><input type="radio" name="q21" value="2"> Cable de consola (rollover)</label></li>
+                <li class="opcion"><label><input type="radio" name="q21" value="3"> Cable coaxial con conectores BNC</label></li>
+            </ul>
+            <div class="justificacion">El cable cruzado conecta dispositivos similares directamente. El directo es para dispositivos distintos (PC–switch) y el de consola para el puerto de administración de routers y switches Cisco.</div>
+        </div>
+        <div class="pregunta" id="p22" data-correcta="3" data-clase="8">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 22</div>
+                <div class="tag-clase">Clase 8 · Capa Física, Topologías y Enrutamiento</div>
+            </div>
+            <div class="pregunta-texto">¿Por qué Ethernet sobre cobre UTP tiene un límite de 100 metros por tramo?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q22" value="0"> Porque el conector RJ-45 no admite cables más largos</label></li>
+                <li class="opcion"><label><input type="radio" name="q22" value="1"> Porque los switches solo reconocen dispositivos a menos de 100 m</label></li>
+                <li class="opcion"><label><input type="radio" name="q22" value="2"> Porque a esa distancia la fibra óptica reemplaza al cobre</label></li>
+                <li class="opcion"><label><input type="radio" name="q22" value="3"> Porque la señal eléctrica se atenúa con la distancia hasta volverse ilegible</label></li>
+            </ul>
+            <div class="justificacion">La atenuación hace que la señal pierda fuerza a lo largo del cable. A 100 m queda aproximadamente un 60% de la señal, el máximo que el estándar IEEE 802.3 admite para UTP.</div>
+        </div>
+        <div class="pregunta" id="p23" data-correcta="2" data-clase="9">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 23</div>
+                <div class="tag-clase">Clase 9 · Conmutación Ethernet y Paquetes IP</div>
+            </div>
+            <div class="pregunta-texto">Un switch recibe una trama cuya MAC de destino no figura en su tabla de direcciones MAC. ¿Qué hace?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q23" value="0"> La descarta</label></li>
+                <li class="opcion"><label><input type="radio" name="q23" value="1"> La envía solo al puerto del gateway</label></li>
+                <li class="opcion"><label><input type="radio" name="q23" value="2"> La inunda (flooding) por todos los puertos excepto por el que la recibió</label></li>
+                <li class="opcion"><label><input type="radio" name="q23" value="3"> Genera un ICMP de destino inalcanzable</label></li>
+            </ul>
+            <div class="justificacion">Ante una MAC de destino desconocida, el switch hace flooding. Cuando el destino responde, el switch aprende su MAC y su puerto, y las próximas tramas ya van solo al puerto correcto.</div>
+        </div>
+        <div class="pregunta" id="p24" data-correcta="1" data-clase="9">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 24</div>
+                <div class="tag-clase">Clase 9 · Conmutación Ethernet y Paquetes IP</div>
+            </div>
+            <div class="pregunta-texto">Recibís una respuesta de ping con TTL=117 desde un servidor cuyo sistema operativo usa un TTL inicial de 128. ¿Cuántos routers atravesó la respuesta?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q24" value="0"> 5</label></li>
+                <li class="opcion"><label><input type="radio" name="q24" value="1"> 11</label></li>
+                <li class="opcion"><label><input type="radio" name="q24" value="2"> 117</label></li>
+                <li class="opcion"><label><input type="radio" name="q24" value="3"> 128</label></li>
+            </ul>
+            <div class="justificacion">Cada router decrementa el TTL en 1. Si salió con 128 y llegó con 117, pasó por 128 − 117 = 11 routers.</div>
+        </div>
+        <div class="pregunta" id="p25" data-correcta="2" data-clase="10">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 25</div>
+                <div class="tag-clase">Clase 10 · Diseño Jerárquico, Nube y Virtualización</div>
+            </div>
+            <div class="pregunta-texto">Una empresa suma un piso con 40 PCs nuevas sin modificar su red troncal. ¿Qué capa del diseño jerárquico se amplía?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q25" value="0"> Core</label></li>
+                <li class="opcion"><label><input type="radio" name="q25" value="1"> Distribución</label></li>
+                <li class="opcion"><label><input type="radio" name="q25" value="2"> Acceso, agregando switches de acceso</label></li>
+                <li class="opcion"><label><input type="radio" name="q25" value="3"> Ninguna: hay que rediseñar toda la red</label></li>
+            </ul>
+            <div class="justificacion">Una ventaja del diseño jerárquico es la escalabilidad: se agregan switches de acceso para conectar usuarios sin tocar el core ni la distribución.</div>
+        </div>
+        <div class="pregunta" id="p26" data-correcta="2" data-clase="10">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 26</div>
+                <div class="tag-clase">Clase 10 · Diseño Jerárquico, Nube y Virtualización</div>
+            </div>
+            <div class="pregunta-texto">Una startup alquila servidores virtuales en AWS EC2 y se encarga de instalar el sistema operativo y sus aplicaciones. ¿Qué modelo de servicio en la nube está usando?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q26" value="0"> SaaS (Software como servicio)</label></li>
+                <li class="opcion"><label><input type="radio" name="q26" value="1"> PaaS (Plataforma como servicio)</label></li>
+                <li class="opcion"><label><input type="radio" name="q26" value="2"> IaaS (Infraestructura como servicio)</label></li>
+                <li class="opcion"><label><input type="radio" name="q26" value="3"> Nube comunitaria</label></li>
+            </ul>
+            <div class="justificacion">En IaaS el proveedor administra el servidor físico, la red y el almacenamiento; el cliente se ocupa del sistema operativo, las aplicaciones y los datos.</div>
+        </div>
+        <div class="pregunta" id="p27" data-correcta="1" data-clase="10">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 27</div>
+                <div class="tag-clase">Clase 10 · Diseño Jerárquico, Nube y Virtualización</div>
+            </div>
+            <div class="pregunta-texto">El primer octeto 172 de una IP privada, escrito en binario, es 10101100. ¿Cuál es su valor en hexadecimal?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q27" value="0"> A2</label></li>
+                <li class="opcion"><label><input type="radio" name="q27" value="1"> AC</label></li>
+                <li class="opcion"><label><input type="radio" name="q27" value="2"> CA</label></li>
+                <li class="opcion"><label><input type="radio" name="q27" value="3"> B4</label></li>
+            </ul>
+            <div class="justificacion">Cada dígito hexadecimal equivale a 4 bits: 1010 = A y 1100 = C, por lo tanto 10101100 = AC (172 en decimal).</div>
+        </div>
+        <div class="pregunta" id="p28" data-correcta="3" data-clase="11">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 28</div>
+                <div class="tag-clase">Clase 11 · Dispositivos Cisco y Solución de Problemas</div>
+            </div>
+            <div class="pregunta-texto">Configuraste la IP de administración en un switch Cisco, pero no guardaste los cambios. Tras un corte de energía la configuración desapareció. ¿Qué comando faltó?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q28" value="0"> show running-config</label></li>
+                <li class="opcion"><label><input type="radio" name="q28" value="1"> reload</label></li>
+                <li class="opcion"><label><input type="radio" name="q28" value="2"> enable secret</label></li>
+                <li class="opcion"><label><input type="radio" name="q28" value="3"> copy running-config startup-config</label></li>
+            </ul>
+            <div class="justificacion">Los cambios se aplican en la running-config (RAM), que se pierde al reiniciar. Hay que copiarla a la startup-config (NVRAM) con 'copy run start' o 'write'.</div>
+        </div>
+        <div class="pregunta" id="p29" data-correcta="1" data-clase="11">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 29</div>
+                <div class="tag-clase">Clase 11 · Dispositivos Cisco y Solución de Problemas</div>
+            </div>
+            <div class="pregunta-texto">Un puerto de switch en auto/auto está conectado a un equipo configurado manualmente en 100 Mbps full-duplex. ¿Qué suele ocurrir?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q29" value="0"> Ambos operan en full-duplex sin problemas</label></li>
+                <li class="opcion"><label><input type="radio" name="q29" value="1"> El switch cae a half-duplex: hay un duplex mismatch, con colisiones y bajo rendimiento</label></li>
+                <li class="opcion"><label><input type="radio" name="q29" value="2"> El switch no detecta el enlace</label></li>
+                <li class="opcion"><label><input type="radio" name="q29" value="3"> El puerto se apaga automáticamente</label></li>
+            </ul>
+            <div class="justificacion">Si un lado está en auto y el otro en valores fijos, el lado automático usa half-duplex por defecto. El resultado es un duplex mismatch. La recomendación es dejar ambos extremos en auto/auto.</div>
+        </div>
+        <div class="pregunta" id="p30" data-correcta="1" data-clase="11">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 30</div>
+                <div class="tag-clase">Clase 11 · Dispositivos Cisco y Solución de Problemas</div>
+            </div>
+            <div class="pregunta-texto">Asignaste una IP a la interfaz GigabitEthernet 0/0 de un router Cisco, pero la interfaz sigue 'administratively down'. ¿Qué falta?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q30" value="0"> ip route 0.0.0.0 0.0.0.0</label></li>
+                <li class="opcion"><label><input type="radio" name="q30" value="1"> El comando no shutdown</label></li>
+                <li class="opcion"><label><input type="radio" name="q30" value="2"> enable secret</label></li>
+                <li class="opcion"><label><input type="radio" name="q30" value="3"> copy startup-config running-config</label></li>
+            </ul>
+            <div class="justificacion">En los routers Cisco las interfaces están apagadas por defecto y se activan con 'no shutdown'. En los switches, en cambio, las interfaces están activas por defecto.</div>
+        </div>
+        <div class="pregunta" id="p31" data-correcta="0" data-clase="12">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 31</div>
+                <div class="tag-clase">Clase 12 · Solución de Problemas y Soporte de Red</div>
+            </div>
+            <div class="pregunta-texto">Un usuario dice: 'Ayer funcionaba y hoy no'. Tenés la configuración de respaldo del día anterior. ¿Qué enfoque de diagnóstico aprovecha ese respaldo?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q31" value="0"> Spot the differences: comparar contra la configuración que funcionaba</label></li>
+                <li class="opcion"><label><input type="radio" name="q31" value="1"> Bottom-up: revisar de la capa 1 a la 7</label></li>
+                <li class="opcion"><label><input type="radio" name="q31" value="2"> Top-down: revisar de la capa 7 a la 1</label></li>
+                <li class="opcion"><label><input type="radio" name="q31" value="3"> Swap components: reemplazar hardware</label></li>
+            </ul>
+            <div class="justificacion">En 'Spot the differences' se parte de 'funcionaba ayer, hoy no' y se compara la configuración actual con una versión que funcionaba para encontrar qué cambió. Requiere documentación y backups.</div>
+        </div>
+        <div class="pregunta" id="p32" data-correcta="0" data-clase="12">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 32</div>
+                <div class="tag-clase">Clase 12 · Solución de Problemas y Soporte de Red</div>
+            </div>
+            <div class="pregunta-texto">En un sistema de tickets de soporte, ¿qué define el SLA (Service Level Agreement)?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q32" value="0"> El tiempo límite de respuesta y resolución comprometido para el ticket</label></li>
+                <li class="opcion"><label><input type="radio" name="q32" value="1"> El nombre del técnico asignado</label></li>
+                <li class="opcion"><label><input type="radio" name="q32" value="2"> La contraseña del usuario afectado</label></li>
+                <li class="opcion"><label><input type="radio" name="q32" value="3"> El tipo de dispositivo afectado</label></li>
+            </ul>
+            <div class="justificacion">El SLA fija los plazos de respuesta y resolución según la prioridad del ticket. Sirve para priorizar qué casos atender primero y medir el cumplimiento del servicio.</div>
+        </div>
+        <div class="pregunta" id="p33" data-correcta="3" data-clase="13">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 33</div>
+                <div class="tag-clase">Clase 13 · Seguridad: Amenazas y Ataques</div>
+            </div>
+            <div class="pregunta-texto">Un correo dirigido al CFO menciona el proyecto Q3 real de la empresa y trae un adjunto malicioso. ¿Qué tipo de ataque es?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q33" value="0"> Smishing</label></li>
+                <li class="opcion"><label><input type="radio" name="q33" value="1"> Phishing masivo y genérico</label></li>
+                <li class="opcion"><label><input type="radio" name="q33" value="2"> Tailgating</label></li>
+                <li class="opcion"><label><input type="radio" name="q33" value="3"> Whaling (spear phishing dirigido a ejecutivos)</label></li>
+            </ul>
+            <div class="justificacion">El spear phishing se personaliza para una persona u organización específica. Cuando apunta a ejecutivos de alto nivel (CEO, CFO) se llama whaling. El phishing masivo, en cambio, es genérico.</div>
+        </div>
+        <div class="pregunta" id="p34" data-correcta="2" data-clase="13">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 34</div>
+                <div class="tag-clase">Clase 13 · Seguridad: Amenazas y Ataques</div>
+            </div>
+            <div class="pregunta-texto">Un atacante prueba en Gmail las credenciales que robó de otro sitio, aprovechando que muchos usuarios reutilizan su contraseña. ¿Cómo se llama esta técnica?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q34" value="0"> Ataque de diccionario</label></li>
+                <li class="opcion"><label><input type="radio" name="q34" value="1"> Fuerza bruta</label></li>
+                <li class="opcion"><label><input type="radio" name="q34" value="2"> Credential stuffing</label></li>
+                <li class="opcion"><label><input type="radio" name="q34" value="3"> Rainbow table</label></li>
+            </ul>
+            <div class="justificacion">Credential stuffing es usar credenciales robadas de un sitio en otros servicios. La mitigación es usar contraseñas únicas por sitio, con un gestor de contraseñas y MFA.</div>
+        </div>
+        <div class="pregunta" id="p35" data-correcta="0" data-clase="13">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 35</div>
+                <div class="tag-clase">Clase 13 · Seguridad: Amenazas y Ataques</div>
+            </div>
+            <div class="pregunta-texto">Un ataque DDoS deja fuera de servicio la web de una empresa. ¿Qué pilar de la tríada CIA afecta principalmente?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q35" value="0"> Disponibilidad</label></li>
+                <li class="opcion"><label><input type="radio" name="q35" value="1"> Confidencialidad</label></li>
+                <li class="opcion"><label><input type="radio" name="q35" value="2"> Integridad</label></li>
+                <li class="opcion"><label><input type="radio" name="q35" value="3"> No repudio</label></li>
+            </ul>
+            <div class="justificacion">Un DoS/DDoS busca que el servicio no esté disponible para los usuarios legítimos. Es un ataque a la Disponibilidad de la tríada Confidencialidad–Integridad–Disponibilidad.</div>
+        </div>
+        <div class="pregunta" id="p36" data-correcta="2" data-clase="14">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 36</div>
+                <div class="tag-clase">Clase 14 · Seguridad: Control de Acceso y Defensas</div>
+            </div>
+            <div class="pregunta-texto">¿Cuál de estas combinaciones es verdadera autenticación multifactor?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q36" value="0"> Contraseña + pregunta secreta</label></li>
+                <li class="opcion"><label><input type="radio" name="q36" value="1"> PIN + contraseña</label></li>
+                <li class="opcion"><label><input type="radio" name="q36" value="2"> Contraseña + código enviado al celular</label></li>
+                <li class="opcion"><label><input type="radio" name="q36" value="3"> Dos contraseñas distintas</label></li>
+            </ul>
+            <div class="justificacion">MFA exige factores de categorías DIFERENTES: algo que sabés (contraseña) + algo que tenés (celular). Contraseña, PIN y pregunta secreta son todos 'algo que sabés'.</div>
+        </div>
+        <div class="pregunta" id="p37" data-correcta="3" data-clase="14">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 37</div>
+                <div class="tag-clase">Clase 14 · Seguridad: Control de Acceso y Defensas</div>
+            </div>
+            <div class="pregunta-texto">Un servidor registra qué comandos ejecutó cada administrador y a qué hora. ¿Qué componente de AAA es?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q37" value="0"> Autenticación</label></li>
+                <li class="opcion"><label><input type="radio" name="q37" value="1"> Autorización</label></li>
+                <li class="opcion"><label><input type="radio" name="q37" value="2"> Cifrado</label></li>
+                <li class="opcion"><label><input type="radio" name="q37" value="3"> Accounting (registro de actividad)</label></li>
+            </ul>
+            <div class="justificacion">En AAA, Authentication verifica quién sos, Authorization define qué podés hacer y Accounting registra qué hiciste. Esos registros dan el rastro de auditoría.</div>
+        </div>
+        <div class="pregunta" id="p38" data-correcta="0" data-clase="14">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 38</div>
+                <div class="tag-clase">Clase 14 · Seguridad: Control de Acceso y Defensas</div>
+            </div>
+            <div class="pregunta-texto">¿Cuál de estas medidas de seguridad Wi-Fi se considera 'seguridad por oscuridad' y de poca efectividad real?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q38" value="0"> Ocultar el SSID</label></li>
+                <li class="opcion"><label><input type="radio" name="q38" value="1"> Usar WPA3</label></li>
+                <li class="opcion"><label><input type="radio" name="q38" value="2"> Deshabilitar WPS</label></li>
+                <li class="opcion"><label><input type="radio" name="q38" value="3"> Crear una red de invitados separada</label></li>
+            </ul>
+            <div class="justificacion">Ocultar el SSID agrega poco: la red sigue siendo detectable con herramientas comunes. Las medidas efectivas son WPA3, desactivar WPS y aislar a los invitados.</div>
+        </div>
+        <div class="pregunta" id="p39" data-correcta="2" data-clase="15">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 39</div>
+                <div class="tag-clase">Clase 15 · Diagnóstico de Redes con Inteligencia Artificial</div>
+            </div>
+            <div class="pregunta-texto">Una semana después de implementar una herramienta de AIOps, genera muchas alertas falsas. ¿Cuál es la causa más probable?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q39" value="0"> La IA no sirve para monitorear redes</label></li>
+                <li class="opcion"><label><input type="radio" name="q39" value="1"> Los umbrales fijos están demasiado altos</label></li>
+                <li class="opcion"><label><input type="radio" name="q39" value="2"> El modelo aún no tuvo suficiente historial para aprender qué es 'normal' (período de warm-up)</label></li>
+                <li class="opcion"><label><input type="radio" name="q39" value="3"> El firewall bloquea la telemetría</label></li>
+            </ul>
+            <div class="justificacion">Un modelo recién implementado necesita tiempo para aprender el comportamiento normal de la red (baseline). Antes de eso le cuesta distinguir lo normal de lo anómalo.</div>
+        </div>
+        <div class="pregunta" id="p40" data-correcta="1" data-clase="15">
+            <div class="pregunta-cab">
+                <div class="pregunta-num">Pregunta 40</div>
+                <div class="tag-clase">Clase 15 · Diagnóstico de Redes con Inteligencia Artificial</div>
+            </div>
+            <div class="pregunta-texto">Le pedís a un asistente de IA una ACL para un router Cisco. ¿Qué corresponde hacer antes de aplicarla en producción?</div>
+            <ul class="opciones">
+                <li class="opcion"><label><input type="radio" name="q40" value="0"> Aplicarla directamente: la IA no se equivoca</label></li>
+                <li class="opcion"><label><input type="radio" name="q40" value="1"> Revisarla y probarla (por ejemplo, en laboratorio), porque la IA es un apoyo y no reemplaza el criterio profesional</label></li>
+                <li class="opcion"><label><input type="radio" name="q40" value="2"> Descartarla: los asistentes de IA no sirven para redes</label></li>
+                <li class="opcion"><label><input type="radio" name="q40" value="3"> Pedirle a la propia IA que la apruebe</label></li>
+            </ul>
+            <div class="justificacion">Los asistentes de IA generan borradores para revisar y adaptar. La IA amplifica el criterio de un buen profesional de redes, pero no lo reemplaza.</div>
+        </div>
+
+        <button type="button" class="btn-corregir" id="btnCorregir">Corregir cuestionario</button>
+    </form>
+
+    <p class="pie">Redes Informáticas, Conectividad y Diagnóstico con IA · Cuestionario Final Integrador</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 🔧 CONFIGURACIÓN — misma URL de Google Apps Script que usan los
+// cuestionarios de cada clase. El resultado se envía con el nombre
+// "Cuestionario Final Integrador" en el campo "capitulo".
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVDS5dMEVVzg363GJJk9dBBqjS5MeN0iaDuMiL6_eNI7R1xxq2U21c_SZ8mwnE9Na5aA/exec";
+const NOMBRE_CLASE = "Cuestionario Final Integrador";
+const NOMBRES_CLASES = {"1": "Fundamentos de Redes", "2": "IPv4 y Sistemas Numéricos", "3": "IPv6, DHCP y Descubrimiento de Vecinos", "4": "Capa de Acceso, Medios y Ethernet", "5": "Gateways, NAT, ARP y Enrutamiento", "6": "TCP/UDP, DNS y Servicios de Aplicación", "7": "ICMP y Herramientas de Diagnóstico", "8": "Capa Física, Topologías y Enrutamiento", "9": "Conmutación Ethernet y Paquetes IP", "10": "Diseño Jerárquico, Nube y Virtualización", "11": "Dispositivos Cisco y Solución de Problemas", "12": "Solución de Problemas y Soporte de Red", "13": "Seguridad: Amenazas y Ataques", "14": "Seguridad: Control de Acceso y Defensas", "15": "Diagnóstico de Redes con Inteligencia Artificial"};
+// ═══════════════════════════════════════════════════════════════
+
+const TOTAL = document.querySelectorAll('.pregunta').length;
+
+function actualizarProgreso() {
+    const respondidas = document.querySelectorAll('.pregunta input[type=radio]:checked').length;
+    document.getElementById('progresoTexto').textContent = respondidas + ' / ' + TOTAL + ' respondidas';
+    document.getElementById('progresoRelleno').style.width = (respondidas / TOTAL * 100) + '%';
+}
+
+document.getElementById('quizForm').addEventListener('change', function(e) {
+    if (e.target.matches('input[type=radio]')) {
+        e.target.closest('.pregunta').classList.remove('sin-responder');
+        actualizarProgreso();
+    }
+});
+
+function enviarResultado(payload) {
+    const estadoEnvio = document.getElementById('estadoEnvio');
+    estadoEnvio.classList.add('mostrar');
+
+    if (!SCRIPT_URL || SCRIPT_URL.indexOf('PEGAR_URL') !== -1) {
+        estadoEnvio.textContent = '⚠️ Falta configurar la URL de Google Sheets en este archivo (buscá SCRIPT_URL al final del HTML).';
+        estadoEnvio.className = 'estado-envio mostrar aviso';
+        return;
+    }
+
+    estadoEnvio.textContent = '⏳ Enviando resultado...';
+    estadoEnvio.className = 'estado-envio mostrar enviando';
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    }).then(() => {
+        estadoEnvio.textContent = '✓ Resultado enviado a la planilla';
+        estadoEnvio.className = 'estado-envio mostrar ok';
+    }).catch(() => {
+        estadoEnvio.textContent = '⚠️ No se pudo enviar el resultado. Revisá tu conexión a internet.';
+        estadoEnvio.className = 'estado-envio mostrar error';
+    });
+}
+
+document.getElementById('btnCorregir').addEventListener('click', function() {
+    const nombreInput = document.getElementById('nombreAlumno');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        nombreInput.classList.add('campo-error');
+        nombreInput.focus();
+        nombreInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    nombreInput.classList.remove('campo-error');
+
+    const preguntas = document.querySelectorAll('.pregunta');
+    let primeraSinResponder = null;
+    let respondidas = 0;
+    preguntas.forEach(p => {
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        if (document.querySelector(`input[name=${nombreQ}]:checked`)) {
+            respondidas++;
+            p.classList.remove('sin-responder');
+        } else {
+            p.classList.add('sin-responder');
+            if (!primeraSinResponder) primeraSinResponder = p;
+        }
+    });
+
+    const aviso = document.getElementById('avisoIncompleto');
+    if (respondidas < preguntas.length) {
+        aviso.classList.add('mostrar');
+        primeraSinResponder.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return;
+    }
+    aviso.classList.remove('mostrar');
+
+    let correctas = 0;
+    const porClase = {};   // clase -> {ok, total}
+    preguntas.forEach(p => {
+        const correctaIdx = p.getAttribute('data-correcta');
+        const clase = p.getAttribute('data-clase');
+        const nombreQ = p.querySelector('input[type=radio]').name;
+        const seleccionado = document.querySelector(`input[name=${nombreQ}]:checked`);
+        const opciones = p.querySelectorAll('.opcion');
+
+        opciones.forEach((op, idx) => {
+            const input = op.querySelector('input');
+            input.disabled = true;
+            if (idx == correctaIdx) {
+                op.classList.add('marcar-correcta');
+            } else if (seleccionado && idx == seleccionado.value) {
+                op.classList.add('marcar-incorrecta');
+            }
+        });
+
+        p.classList.add('corregida');
+        const acerto = seleccionado && seleccionado.value == correctaIdx;
+        if (acerto) correctas++;
+        if (!porClase[clase]) porClase[clase] = {ok: 0, total: 0};
+        porClase[clase].total++;
+        if (acerto) porClase[clase].ok++;
+    });
+
+    const total = preguntas.length;
+    const resultado = document.getElementById('resultadoFinal');
+    const puntajeTexto = document.getElementById('puntajeTexto');
+    const mensajeTexto = document.getElementById('mensajeTexto');
+
+    const porcentaje = Math.round((correctas / total) * 100);
+    puntajeTexto.textContent = `${correctas} / ${total} correctas (${porcentaje}%)`;
+
+    resultado.classList.add('mostrar');
+    if (porcentaje >= 60) {
+        resultado.classList.add('aprobado');
+        mensajeTexto.textContent = '¡Muy bien! Revisá las justificaciones para reforzar lo que falte.';
+    } else {
+        resultado.classList.add('reprobado');
+        mensajeTexto.textContent = 'Te conviene repasar el material antes de seguir. Revisá cada justificación.';
+    }
+
+    // Temas para repasar: clases con al menos una respuesta incorrecta
+    const repaso = document.getElementById('repaso');
+    const pendientes = Object.keys(porClase)
+        .map(Number).sort((a, b) => a - b)
+        .filter(c => porClase[c].ok < porClase[c].total);
+    if (pendientes.length === 0) {
+        repaso.innerHTML = '<h3>Temas para repasar</h3><p class="ok">¡Sin errores! Dominás los temas de las 15 clases.</p>';
+    } else {
+        repaso.innerHTML = '<h3>Temas para repasar</h3><ul>' + pendientes.map(c =>
+            `<li><span class="tag-clase-resumen">Clase ${c} — ${NOMBRES_CLASES[c]}</span> (${porClase[c].ok}/${porClase[c].total} correctas)</li>`
+        ).join('') + '</ul>';
+    }
+    repaso.classList.add('mostrar');
+
+    resultado.scrollIntoView({behavior: 'smooth'});
+    this.disabled = true;
+    this.textContent = 'Cuestionario corregido ✓';
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR');
+    const hora = ahora.toLocaleTimeString('es-AR');
+    const comision = document.getElementById('comisionAlumno').value.trim();
+
+    enviarResultado({
+        capitulo: NOMBRE_CLASE,
+        nombre: nombre,
+        comision: comision,
+        puntaje: correctas,
+        total: total,
+        porcentaje: porcentaje,
+        fecha: fecha,
+        hora: hora
+    });
+});
+</script>
+</body>
+</html>
